@@ -212,3 +212,26 @@ def get_settings() -> Settings:
     Used as a FastAPI dependency and in script composition roots.
     """
     return Settings()
+
+
+class CorsSettings(BaseSettings):
+    """Browser origins allowed to call the API (read at app start-up).
+
+    Kept separate from ``Settings`` so building the FastAPI app does not
+    require ``GROQ_API_KEY`` (tests and tooling import the app without it).
+    """
+
+    allowed_origins: str = Field(
+        default="http://localhost:3000,http://127.0.0.1:3000",
+        description="Comma-separated origins allowed by CORS (the web UI).",
+    )
+
+    model_config = {
+        "env_file": str(_PROJECT_ROOT / ".env"),
+        "env_file_encoding": "utf-8",
+        "extra": "ignore",
+    }
+
+    @property
+    def origins(self) -> list[str]:
+        return [o.strip().rstrip("/") for o in self.allowed_origins.split(",") if o.strip()]

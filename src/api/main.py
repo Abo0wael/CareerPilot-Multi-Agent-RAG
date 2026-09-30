@@ -44,6 +44,7 @@ from src.api.schemas import (
 )
 from src.application.ingest_jobs import IngestJobsUseCase
 from src.domain.interfaces import IndexStatsReader
+from src.infrastructure.config import CorsSettings
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,13 @@ app = FastAPI(
     version="1.1.0",
     lifespan=lifespan,
 )
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CorsSettings().origins,  # ALLOWED_ORIGINS in .env (the web UI)
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-Admin-Token"],
+    expose_headers=["Retry-After"],  # lets the browser read the rate-limit wait
+)
 register_error_handlers(app)
 
 
