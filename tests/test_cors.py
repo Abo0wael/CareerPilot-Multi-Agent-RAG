@@ -34,7 +34,15 @@ def test_default_allows_local_ui(monkeypatch: pytest.MonkeyPatch) -> None:
     origins = CorsSettings(_env_file=None).origins
     assert UI_ORIGIN in origins
     assert "http://127.0.0.1:3000" in origins
-    assert "http://192.168.100.17:3000" in origins
+    assert "http://192.168.100.17:3000" not in origins
+
+
+def test_custom_lan_origin_configurable_via_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    custom_lan = "http://192.168.1.100:3000"
+    monkeypatch.setenv("ALLOWED_ORIGINS", f"http://localhost:3000, {custom_lan}")
+    origins = CorsSettings(_env_file=None).origins
+    assert custom_lan in origins
+    assert UI_ORIGIN in origins
 
 
 def test_preflight_from_ui_origin_is_allowed(client: TestClient) -> None:
@@ -45,17 +53,6 @@ def test_preflight_from_ui_origin_is_allowed(client: TestClient) -> None:
     )
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == UI_ORIGIN
-
-
-def test_preflight_from_lan_origin_is_allowed(client: TestClient) -> None:
-    lan_origin = "http://192.168.100.17:3000"
-    response = client.options(
-        "/match",
-        headers={"Origin": lan_origin, "Access-Control-Request-Method": "POST",
-                 "Access-Control-Request-Headers": "content-type"},
-    )
-    assert response.status_code == 200
-    assert response.headers["access-control-allow-origin"] == lan_origin
 
 
 def test_unknown_origin_is_not_allowed(client: TestClient) -> None:

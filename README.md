@@ -234,7 +234,7 @@ copy .env.example .env.local        # NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 npm run dev                          # http://localhost:3000
 ```
 
-The API only accepts browser requests from `ALLOWED_ORIGINS` (default `http://localhost:3000`). Deployment notes (UI on Vercel, API on a host such as Render) are in [`frontend/README.md`](frontend/README.md).
+The API only accepts browser requests from `ALLOWED_ORIGINS` (default `http://localhost:3000,http://127.0.0.1:3000`). Deployment notes (UI on Vercel, API on a host such as Render) are in [`frontend/README.md`](frontend/README.md).
 
 ## API reference
 

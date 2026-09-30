@@ -6,7 +6,7 @@ It talks **only** to the FastAPI backend (`NEXT_PUBLIC_API_URL`). It never calls
 ## Run locally
 
 ```bash
-# the backend must be running (see the root README): uvicorn src.api.main:app --port 8000
+# the backend must be running (see the root README): uvicorn src.api.main:app --host 127.0.0.1 --port 8000
 cd frontend
 npm install
 copy .env.example .env.local        # macOS/Linux: cp .env.example .env.local
