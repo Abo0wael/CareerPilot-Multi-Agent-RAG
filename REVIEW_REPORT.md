@@ -55,7 +55,9 @@ The dead `InterviewCoachAgent` was removed: it had no endpoint and its prompt ne
 ## 4. Tech subset and chunking (data)
 
 - **Subset:** title keywords, or an ENG/IT skill tag together with a technical title qualifier, minus an exclusion list (civil/mechanical engineering, sales, clinical, legal…). Industry is not used alone. Result: **13,975 postings**.
-- **Subset precision:** 47/50 = 94% on a random audit (seed 2026) made by the previous tool. It was **not re-audited**, and one "tech" label ("Senior Strategic Partner Manager, Cloud") is debatable.
+- **Subset precision (re-audited):** a new random sample of 50 (seed 42, `outputs/evaluation/tech_subset_audit.md`) gives **41/50 = 82%** (95% CI about 69–90%), or 44/50 = 88% if industrial PLC-controls engineers count as tech. The previous tool reported 94% (47/50, seed 2026).
+  - **Errors:** non-software engineering (boilers, plant instrumentation, photonics, solid waste, mining) and one apparel "Technical Developer". They get in through "engineer"/"developer" titles plus an ENG skill tag.
+  - **Also seen:** the sample contains one repost duplicate.
 - **EDA** (`scripts/eda_chunking.py`, re-run): median description 3,130 characters; 91.1% contain line breaks; **58.9%** have at least one section header and 34.8% have two or more. The index agrees: 58.9% of postings are chunked by sections and 41.1% only with the `full` fallback.
 - **Chunker:** headers → sections; hierarchical split `\n\n` → `\n` → sentence → word → hard cap at 800; merge fragments under 100 characters when the merge fits.
 
@@ -70,6 +72,10 @@ The dead `InterviewCoachAgent` was removed: it had no endpoint and its prompt ne
 | **Total** | **91,190** | | **800** | **0** |
 
 3,069 chunks (3.37%) remain under 100 characters.
+
+**Token savings from chunking** (`outputs/evaluation/chunking_token_savings.json`): for the same top-20 reranker candidates on the 6 profiles, sending requirement sections instead of full postings saves **17.1%** of job-text tokens on average (10,506 → 8,708), and **31.2%** on the 45.8% of candidates that have headers.
+- **Method:** exact character counts, converted with a chars/token ratio calibrated from Groq `usage.prompt_tokens` on 8 real postings. The full-posting prompt (about 10.5K tokens) exceeds the 8K TPM limit in one request, so it could not be measured by sending it.
+- **Deployed reranker:** it sends the first 600 characters (2,078 tokens, 80.2% saved). Its saving comes from truncation, not chunking.
 
 **Index:** FTS5 external-content table, `porter unicode61` tokenizer. The last rebuild took 66.3 s (CSV loading included), produced 174.0 MB after `VACUUM`, and made 0 LLM calls. The earlier 47.6 s / 156.4 MB figures could not be reproduced.
 
@@ -160,3 +166,4 @@ Details and interpretation are in the README (section 6). Generated tables are i
 - **Query:** it depends on the order of extracted skills, and LLM output is not fully deterministic, so cold-cache results can differ between runs.
 - **Verifier:** checks bullets but not the tailoring summary line. Its false-alarm rate on real tailoring is unmeasured.
 - **Data:** duplicate reposts appear in the dataset.
+- **Tech subset:** about 18% of postings are not software/IT jobs (audited 82%). The "engineer + ENG skill tag" rule is the main leak; tightening it is future work.

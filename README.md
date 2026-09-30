@@ -18,7 +18,7 @@ Recruiters have AI tools that screen thousands of CVs in seconds. Candidates hav
 
 **Flow:** upload CV → structured profile → top-10 real matching jobs with reasons → gap report (requirements you meet, with evidence quoted from your CV, and the ones you are missing) → tailored CV bullets that only use facts from your original CV → claim-by-claim verification. Unsupported claims are removed.
 
-**Data:** 13,975 real tech job postings from Kaggle (`arshkon/linkedin-job-postings`), filtered from the full LinkedIn dataset.
+**Data:** 13,975 tech job postings from Kaggle (`arshkon/linkedin-job-postings`), filtered from the full LinkedIn dataset by title/skill rules. An audited random sample is 82% truly tech (section 10).
 
 ---
 
@@ -119,6 +119,26 @@ Each agent is a thin node: it reads its inputs from the state, calls one use cas
 - **Result:** 91,190 chunks, **0 above 800 characters**. Fragments under 100 characters are merged into a neighbour of the same label when the merge fits under 800. **3.37% of chunks (3,069) are still under 100 characters**, because a merge would exceed the cap or there was no neighbour.
 - **Index:** SQLite FTS5 external-content table. The last rebuild (`scripts/build_index.py`, CSV loading included) took **66.3 s**, produced a **174.0 MB** database, and made zero LLM calls.
 
+
+### 4.1 Why chunk if precision is equal? Measured token savings
+
+For the same top-20 candidates the reranker receives, on each of the 6 evaluation profiles (`scripts/analysis/chunking_token_savings.py`, output `outputs/evaluation/chunking_token_savings.json`):
+
+**Method:** a 20-job prompt of full postings is about 10.5K tokens, which exceeds Groq's 8,000 tokens/minute limit in a single request. So characters were counted exactly and converted to tokens with a chars-per-token ratio calibrated from Groq's reported `usage.prompt_tokens` on 8 real postings (5.66 chars/token for full text, 5.54 for sections).
+
+| Job text sent to the reranker (20 jobs) | Avg job-text tokens | Saved vs full |
+|---|---|---|
+| Full postings (no chunking) | 10,506 | — |
+| Requirement sections only (chunking) | 8,708 | **17.1%** |
+| First 600 characters (deployed reranker) | 2,078 | 80.2% |
+
+- **Savings from sections:** only 45.8% of the candidates have recognisable headers (the rest fall back to full text). On those postings, sections save **31.2%**.
+- **Honest answer:**
+  - Chunking gives a moderate token saving (17% overall, 31% where headers exist) and keeps benefits/about marketing out of the gap and tailoring prompts, which use sections.
+  - Most of the reranker's own saving comes from truncation, not chunking.
+  - Full postings would not fit in one request under the rate limit at all.
+- **Possible improvement (not implemented):** the deployed reranker's first 600 characters are often "About us" text. Taking the 600 characters from the requirement sections would cost the same tokens with more relevant content.
+
 ---
 
 ## 5. Agents and anti-fabrication
@@ -166,7 +186,7 @@ Full generated report: [`outputs/evaluation/evaluation_report.md`](outputs/evalu
 "Whole posting" is a fair baseline: the same 13,975 postings, one chunk per posting, the same query and the same pipeline stage (BM25 only, job-level dedup).
 
 **What the numbers show:**
-- **Chunking:** sections (0.633) vs whole postings (0.650) are **effectively equal**. Whole postings win on 2 profiles, sections on 2, and 2 tie. With this label, section chunking did **not** improve Precision@10. Its value here is that prompts can be built from the requirement sections only (fewer tokens) and that benefits and about text can be excluded; a precision gain is not demonstrated.
+- **Chunking:** sections (0.633) vs whole postings (0.650) are **effectively equal**. Whole postings win on 2 profiles, sections on 2, and 2 tie. With this label, section chunking did **not** improve Precision@10. Its measured value is in the prompts: 17% fewer reranker job-text tokens (31% on postings with headers), and no benefits/about text in the gap and tailoring prompts (section 4.1).
 - **Expansion (OR):** 0.633 → 0.717 on average, but this comes almost entirely from data_scientist (0.10 → 0.80). It improves 3 profiles and hurts 3 (devops −0.2, frontend −0.1, software engineer −0.1). With the old run's expansions the macro effect was negative (0.64 → 0.62). **Expansion is high-variance, not a reliable gain.**
 - **Why expansion helps or hurts:**
   - It rescues data_scientist: the base query (from the first five skills) is `Python R SQL Tableau Power BI`, which reads like a BI analyst. The expansion adds `NumPy`, `Scikit-learn`, which pulls in data-science jobs.
@@ -289,4 +309,4 @@ uvicorn src.api.main:app --host 127.0.0.1 --port 8000
 - **Query:** it uses only the first five extracted skills, and extraction order depends on the LLM. With a cold cache the demo CV's top match changed between runs (LLM outputs are not fully deterministic at temperature 0).
 - **Verification scope:** the verifier checks bullets, not the one-line tailoring summary. It is itself an LLM, so its false-alarm rate on real tailoring is unmeasured.
 - **Data:** the dataset contains reposted duplicates, so the same title can appear twice in a top-10.
-- **Tech-subset precision:** the 94% (47/50) comes from a single-annotator audit by the previous tool and was not re-audited; at least one "tech" label ("Strategic Partner Manager, Cloud") is debatable.
+- **Tech-subset precision:** a fresh random audit (50 postings, seed 42, one annotator) gives **82%** (41/50), or 88% if industrial PLC-controls jobs count as tech. That is lower than the previous tool's 94%. The errors are non-software engineering jobs (boilers, plant instrumentation, photonics, solid waste) and one apparel role. Details: [`outputs/evaluation/tech_subset_audit.md`](outputs/evaluation/tech_subset_audit.md).
