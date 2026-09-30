@@ -1,0 +1,43 @@
+[SYNTHETIC - FOR TESTING/EVALUATION ONLY - NOT A REAL CV]
+
+Ahmed Hassan
+Email: ahmed.h@example.com | Phone: (555) 222-3333
+
+SUMMARY
+Detail-oriented data analyst with 2 years of experience transforming raw data into
+actionable business insights. Proficient in SQL, Python, and data visualization tools.
+
+SKILLS
+SQL, Python, Excel, Tableau, Power BI, Google Analytics, Pandas, NumPy,
+Data Visualization, Statistical Analysis, A/B Testing, Reporting, Looker
+
+EXPERIENCE
+
+Data Analyst | RetailTech Solutions | Mar 2023 - Present
+- Created weekly sales dashboards in Tableau tracking KPIs across 15 retail locations
+- Wrote complex SQL queries analyzing 2M+ transaction records to identify purchasing trends
+- Reduced report generation time by 40% by automating Excel workflows with Python
+- Collaborated with marketing team to design A/B tests for email campaigns
+
+Business Intelligence Intern | DataCo Analytics | Jun 2022 - Feb 2023
+- Built Power BI dashboards monitoring customer acquisition costs across channels
+- Cleaned and validated survey data from 5,000+ respondents using Pandas
+- Generated monthly executive reports summarizing key business metrics
+
+PROJECTS
+
+Sales Forecasting Model
+- Developed time series forecasting model using Prophet for quarterly sales predictions
+- Achieved MAPE of 8.2% on test data across 15 store locations
+- Technologies: Python, Prophet, Pandas, Matplotlib
+
+Customer Churn Analysis
+- Analyzed subscription data to identify factors driving customer churn
+- Built a decision tree model achieving 78% accuracy in predicting churn risk
+- Technologies: Python, scikit-learn, Seaborn
+
+EDUCATION
+
+B.Sc. Business Analytics | City University | 2022
+- GPA: 3.5/4.0
+- Relevant coursework: Statistics, Database Management, Data Mining, Business Intelligence

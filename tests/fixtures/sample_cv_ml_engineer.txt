@@ -1,0 +1,58 @@
+[SYNTHETIC - FOR TESTING/EVALUATION ONLY - NOT A REAL CV]
+
+Priya Sharma
+Email: priya.s@example.com | Phone: (555) 666-7777
+
+SUMMARY
+Machine learning engineer with 3 years of experience deploying production ML systems.
+Strong background in NLP, computer vision, and MLOps. Published researcher with
+experience in both academic and industry settings.
+
+SKILLS
+Python, TensorFlow, PyTorch, scikit-learn, Hugging Face Transformers, SpaCy,
+OpenCV, MLflow, Kubeflow, Docker, Kubernetes, AWS SageMaker, SQL, Spark,
+Feature Engineering, Model Optimization, A/B Testing, Experiment Tracking
+
+EXPERIENCE
+
+Machine Learning Engineer | AI Solutions Ltd. | Jan 2023 - Present
+- Deployed NLP classification model serving 50K predictions/day with 94% accuracy using TensorFlow Serving
+- Built automated ML pipeline with Kubeflow reducing model retraining time from 8 hours to 45 minutes
+- Implemented A/B testing framework for model comparison, leading to 12% improvement in recommendation CTR
+- Reduced model inference latency by 40% through quantization and ONNX Runtime optimization
+
+ML Engineer (Junior) | DataVision Corp. | May 2021 - Dec 2022
+- Developed computer vision model for defect detection on manufacturing line achieving 96% recall
+- Built feature store using Feast serving 20+ ML models across 3 teams
+- Created data labeling pipeline processing 10K images/week with active learning
+- Published internal tech blog on MLOps best practices, read by 200+ engineers
+
+Research Assistant | ML Lab, Graduate University | Sep 2019 - Apr 2021
+- Co-authored 2 papers on few-shot learning accepted at AAAI and NeurIPS workshops
+- Developed novel data augmentation technique improving model accuracy by 5% on small datasets
+- Maintained lab GPU cluster (8x A100) and experiment tracking infrastructure
+
+PROJECTS
+
+Multilingual Sentiment Analyzer
+- Fine-tuned multilingual BERT model for sentiment analysis across 5 languages
+- Deployed as REST API with FastAPI, handling 1K requests/minute
+- Technologies: Python, PyTorch, Hugging Face, FastAPI, Docker
+
+Real-time Object Tracker
+- Built real-time multi-object tracking system using YOLOv5 and DeepSORT
+- Achieved 30 FPS on edge device (Jetson Nano)
+- Technologies: Python, PyTorch, OpenCV, TensorRT
+
+EDUCATION
+
+M.Sc. Computer Science (Machine Learning) | Graduate University | 2021
+- Thesis: "Few-Shot Learning with Meta-Augmentation for Medical Image Classification"
+- GPA: 3.8/4.0
+
+B.Tech. Computer Science | Engineering Institute | 2019
+- GPA: 8.5/10
+
+CERTIFICATIONS
+- Deep Learning Specialization - Coursera/deeplearning.ai (2020)
+- AWS Machine Learning Specialty (2023)

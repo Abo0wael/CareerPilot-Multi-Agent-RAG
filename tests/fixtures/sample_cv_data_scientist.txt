@@ -1,0 +1,46 @@
+[SYNTHETIC - FOR TESTING/EVALUATION ONLY - NOT A REAL CV]
+
+Sarah Johnson
+Email: sarah.j@example.com | Phone: (555) 987-6543
+
+SUMMARY
+Data science enthusiast and recent graduate seeking entry-level positions in data analytics
+and machine learning. Strong foundation in statistics, Python, and SQL.
+
+SKILLS
+Python, R, SQL, Tableau, Power BI, Excel, Pandas, NumPy, scikit-learn, TensorFlow,
+Statistics, A/B Testing, Data Visualization, Jupyter Notebooks
+
+EXPERIENCE
+
+Data Science Intern | Analytics Corp | May 2023 - Aug 2023
+- Analyzed customer churn data for a SaaS product, identifying 5 key risk factors
+- Built a logistic regression model achieving 82% accuracy in predicting churn
+- Created interactive Tableau dashboards for the executive team
+
+Research Assistant | University Data Lab | Sep 2022 - May 2023
+- Collected and cleaned survey data from 2,000+ respondents using Python
+- Applied NLP techniques to classify open-ended survey responses
+- Co-authored a research paper on sentiment analysis of social media data
+
+PROJECTS
+
+COVID-19 Data Dashboard
+- Built an interactive dashboard tracking COVID-19 trends using Plotly and Dash
+- Integrated data from 3 public APIs with daily automated updates
+- Technologies: Python, Plotly, Dash, Pandas
+
+Customer Segmentation Analysis
+- Performed K-means clustering on retail transaction data (500K+ records)
+- Identified 4 distinct customer segments that informed marketing strategy
+- Technologies: Python, scikit-learn, Matplotlib
+
+EDUCATION
+
+M.Sc. Data Science | Tech University | 2023
+- Thesis: "Predicting Employee Attrition Using Ensemble Methods"
+- GPA: 3.9/4.0
+
+B.Sc. Mathematics | Liberal Arts College | 2021
+- Minor in Computer Science
+- GPA: 3.6/4.0

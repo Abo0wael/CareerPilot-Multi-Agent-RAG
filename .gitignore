@@ -1,0 +1,18 @@
+# CareerPilot
+.env
+data/
+index/
+index/whole_postings.db
+# Generated outputs are ignored except the evaluation results (a graded deliverable).
+outputs/*
+!outputs/evaluation/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.pytest_tmp/
+.llm_cache/
+*.egg-info/
+dist/
+build/
+.mypy_cache/

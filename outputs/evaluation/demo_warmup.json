@@ -1,0 +1,170 @@
+{
+  "cv": "sample_cv_backend_engineer.txt",
+  "preferences": "",
+  "pass_1_fill_cache": {
+    "wall_time_s": 0.07,
+    "groq_calls": 0,
+    "total_tokens": 0,
+    "rate_limit_429s": 0,
+    "top_match": "Senior Java Engineer (API/AWS)",
+    "claims": 10,
+    "unsupported_removed": 0,
+    "steps": {
+      "gap_analysis": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "profile_extraction": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "query_expansion": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "rerank": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "tailoring": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "verification": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      }
+    }
+  },
+  "pass_2_from_cache": {
+    "wall_time_s": 0.07,
+    "groq_calls": 0,
+    "total_tokens": 0,
+    "rate_limit_429s": 0,
+    "top_match": "Senior Java Engineer (API/AWS)",
+    "claims": 10,
+    "unsupported_removed": 0,
+    "steps": {
+      "gap_analysis": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "profile_extraction": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "query_expansion": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "rerank": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "tailoring": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "verification": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,156 @@
+"""FastAPI backend for CareerPilot.
+
+Endpoints:
+- GET  /health    index diagnostics
+- POST /profile   CV file or text -> CandidateProfile            (graph: profile)
+- POST /match     profile + preferences -> ranked JobMatch list  (graph: matcher)
+- POST /gap       profile + job_id -> GapReport                   (graph: gap)
+- POST /tailor    profile + job_id -> verified TailoredCV         (graph: tailor -> verifier)
+- POST /pipeline  CV -> profile, matches, gap + tailored CV for the top match (full graph)
+- POST /ingest    rebuild the index (requires X-Admin-Token)
+
+Every reasoning endpoint runs the LangGraph workflow; domain exceptions are
+mapped to HTTP status codes in ``error_handlers.py``.
+"""
+
+from __future__ import annotations
+
+import logging
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator, Optional
+
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, status
+from fastapi.middleware.cors import CORSMiddleware
+
+from src.agents.workflow import CareerPilotWorkflow
+from src.api.dependencies import (
+    clear_app_state,
+    get_index_stats,
+    get_ingest_jobs_use_case,
+    get_workflow,
+    require_admin_token,
+)
+from src.api.error_handlers import register_error_handlers
+from src.api.schemas import (
+    CandidateProfileSchema,
+    GapResponse,
+    HealthResponse,
+    IngestResponse,
+    JobTargetRequest,
+    MatchRequest,
+    MatchResponse,
+    PipelineResponse,
+    TailorResponse,
+)
+from src.application.ingest_jobs import IngestJobsUseCase
+from src.domain.interfaces import IndexStatsReader
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    logger.info("CareerPilot API server starting.")
+    yield
+    clear_app_state()
+    logger.info("CareerPilot API server shutdown.")
+
+
+app = FastAPI(
+    title="CareerPilot API",
+    description="Multi-agent job matching, gap analysis and verified CV tailoring for job seekers.",
+    version="1.1.0",
+    lifespan=lifespan,
+)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+register_error_handlers(app)
+
+
+async def _read_cv(file: Optional[UploadFile], raw_text: Optional[str]) -> dict:
+    """Return workflow CV input from a multipart upload or a text form field."""
+    if file and file.filename:
+        return {"file_bytes": await file.read(), "filename": file.filename}
+    if raw_text and raw_text.strip():
+        return {"raw_text": raw_text.strip()}
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Must provide either an uploaded CV file or 'raw_text' form field.",
+    )
+
+
+@app.get("/health", response_model=HealthResponse, tags=["System"])
+def health_check(stats_reader: IndexStatsReader = Depends(get_index_stats)) -> HealthResponse:
+    """Index diagnostics: job/chunk counts and FTS5 availability."""
+    stats = stats_reader.get_stats()
+    return HealthResponse(
+        status="ok",
+        fts5_available=stats.fts5_available,
+        total_jobs=stats.total_jobs,
+        total_chunks=stats.total_chunks,
+    )
+
+
+@app.post("/profile", response_model=CandidateProfileSchema, tags=["CV Profile"])
+async def build_profile(
+    file: Optional[UploadFile] = File(None),
+    raw_text: Optional[str] = Form(None),
+    workflow: CareerPilotWorkflow = Depends(get_workflow),
+) -> CandidateProfileSchema:
+    """Extract a structured profile from an uploaded CV (PDF / text) or a text form field."""
+    cv_input = await _read_cv(file, raw_text)
+    return CandidateProfileSchema.from_domain(workflow.build_profile(**cv_input))
+
+
+@app.post("/match", response_model=MatchResponse, tags=["Matching"])
+def match_jobs(request: MatchRequest, workflow: CareerPilotWorkflow = Depends(get_workflow)) -> MatchResponse:
+    """BM25 retrieval over job sections + LLM query expansion and reranking."""
+    matches = workflow.match(request.profile.to_domain(), request.preferences, request.top_k)
+    return MatchResponse.from_domain(matches)
+
+
+@app.post("/gap", response_model=GapResponse, tags=["Gap Analysis"])
+def analyze_gap(request: JobTargetRequest, workflow: CareerPilotWorkflow = Depends(get_workflow)) -> GapResponse:
+    """Matched requirements (with CV evidence) and missing requirements for one job."""
+    return GapResponse.from_domain(workflow.analyze_gap(request.profile.to_domain(), request.job_id))
+
+
+@app.post("/tailor", response_model=TailorResponse, tags=["CV Tailoring"])
+def tailor_cv(request: JobTargetRequest, workflow: CareerPilotWorkflow = Depends(get_workflow)) -> TailorResponse:
+    """Tailor CV bullets for one job; unsupported claims are removed and listed separately."""
+    return TailorResponse.from_domain(workflow.tailor(request.profile.to_domain(), request.job_id))
+
+
+@app.post("/pipeline", response_model=PipelineResponse, tags=["Pipeline"])
+async def run_pipeline(
+    file: Optional[UploadFile] = File(None),
+    raw_text: Optional[str] = Form(None),
+    preferences: str = Form(""),
+    top_k: int = Form(10, ge=1, le=50),
+    workflow: CareerPilotWorkflow = Depends(get_workflow),
+) -> PipelineResponse:
+    """Full flow: profile -> match -> gap -> tailor -> verify (for the top-ranked job)."""
+    cv_input = await _read_cv(file, raw_text)
+    result = workflow.run_pipeline(**cv_input, preferences=preferences, top_k=top_k)
+    return PipelineResponse(
+        profile=CandidateProfileSchema.from_domain(result.profile),
+        matches=MatchResponse.from_domain(result.matches),
+        target_job_id=result.target_job_id,
+        gap=GapResponse.from_domain(result.gap_report) if result.gap_report else None,
+        tailored_cv=TailorResponse.from_domain(result.tailored_cv) if result.tailored_cv else None,
+    )
+
+
+@app.post(
+    "/ingest",
+    response_model=IngestResponse,
+    tags=["Admin"],
+    dependencies=[Depends(require_admin_token)],
+)
+def rebuild_index(use_case: IngestJobsUseCase = Depends(get_ingest_jobs_use_case)) -> IngestResponse:
+    """Rebuild the index from the raw dataset (zero LLM calls). Requires X-Admin-Token."""
+    result = use_case.execute(clear_existing=True)
+    return IngestResponse(
+        status="success",
+        jobs_ingested=result.jobs_ingested,
+        chunks_indexed=result.chunks_indexed,
+    )

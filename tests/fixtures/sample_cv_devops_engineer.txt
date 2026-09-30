@@ -1,0 +1,57 @@
+[SYNTHETIC - FOR TESTING/EVALUATION ONLY - NOT A REAL CV]
+
+Marcus Chen
+Email: marcus.c@example.com | Phone: (555) 888-9999
+
+SUMMARY
+DevOps engineer with 4 years of experience building and maintaining CI/CD pipelines,
+cloud infrastructure, and monitoring systems. Expert in AWS, Terraform, and Kubernetes.
+Committed to infrastructure as code and automation-first mindset.
+
+SKILLS
+AWS (EC2, ECS, EKS, Lambda, CloudFormation, IAM, VPC, S3, RDS, CloudWatch),
+Terraform, Ansible, Docker, Kubernetes, Helm, ArgoCD, Jenkins, GitHub Actions,
+CircleCI, Linux, Bash, Python, Go, Prometheus, Grafana, ELK Stack, Datadog,
+Nginx, HAProxy, PostgreSQL, MongoDB, Redis, Git
+
+EXPERIENCE
+
+Senior DevOps Engineer | ScaleUp Technologies | Feb 2023 - Present
+- Architected multi-region AWS infrastructure supporting 99.99% uptime SLA for 5M+ users
+- Migrated 30+ services to Kubernetes (EKS) with zero-downtime deployments using ArgoCD
+- Built Terraform modules library reducing infrastructure provisioning time by 70%
+- Implemented comprehensive monitoring with Prometheus/Grafana reducing MTTR from 45 to 8 minutes
+- Led incident response for P1 incidents and established post-mortem process
+
+DevOps Engineer | WebApp Co. | Jul 2021 - Jan 2023
+- Designed CI/CD pipelines with GitHub Actions deploying 50+ times/day across 3 environments
+- Implemented infrastructure as code with Terraform managing 200+ AWS resources
+- Set up ELK stack for centralized logging processing 500GB logs/day
+- Reduced AWS costs by 30% through right-sizing and reserved instance optimization
+
+Systems Administrator | HostPro | Jun 2020 - Jun 2021
+- Managed fleet of 100+ Linux servers running production workloads
+- Automated server provisioning with Ansible reducing setup time from 4 hours to 20 minutes
+- Implemented backup and disaster recovery procedures for critical databases
+
+PROJECTS
+
+Kubernetes Cluster Autoscaler Plugin
+- Built custom autoscaler plugin for GPU workloads on Kubernetes
+- Reduced GPU idle time by 40% while maintaining job SLA
+- Technologies: Go, Kubernetes, AWS
+
+Infrastructure Cost Dashboard
+- Created real-time cost monitoring dashboard tracking AWS spend across 5 accounts
+- Automated cost anomaly alerts saving $15K/month in unnecessary spending
+- Technologies: Python, AWS Cost Explorer API, Grafana
+
+EDUCATION
+
+B.Sc. Information Technology | State Tech University | 2020
+- GPA: 3.4/4.0
+
+CERTIFICATIONS
+- AWS Solutions Architect Professional (2023)
+- Certified Kubernetes Administrator (CKA) (2022)
+- HashiCorp Terraform Associate (2021)

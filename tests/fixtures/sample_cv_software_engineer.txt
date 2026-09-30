@@ -1,0 +1,47 @@
+[SYNTHETIC - FOR TESTING/EVALUATION ONLY - NOT A REAL CV]
+
+John Smith
+Email: john.smith@example.com | Phone: (555) 123-4567
+
+SUMMARY
+Experienced software engineer with 4 years of experience in Python, web development,
+and cloud infrastructure. Passionate about building scalable data pipelines and REST APIs.
+
+SKILLS
+Python, JavaScript, TypeScript, React, Node.js, PostgreSQL, MongoDB, AWS, Docker, Kubernetes,
+Git, CI/CD, REST APIs, GraphQL, TensorFlow, Pandas, NumPy, Linux
+
+EXPERIENCE
+
+Software Engineer | TechCorp Inc. | Jan 2022 - Present
+- Designed and implemented RESTful APIs serving 50K+ daily requests using FastAPI and PostgreSQL
+- Built CI/CD pipelines with GitHub Actions, reducing deployment time by 60%
+- Migrated legacy monolith to microservices architecture on AWS ECS
+- Mentored 3 junior developers through code reviews and pair programming sessions
+
+Junior Developer | StartupXYZ | Jun 2020 - Dec 2021
+- Developed React frontend components for an e-commerce platform with 10K monthly active users
+- Wrote Python scripts for ETL pipelines processing 1M+ records daily using Pandas
+- Implemented unit and integration tests achieving 85% code coverage
+
+PROJECTS
+
+ML Price Predictor
+- Built a machine learning model for real estate price prediction using scikit-learn
+- Deployed the model as a REST API with Flask, handling 1K predictions/day
+- Technologies: Python, scikit-learn, Flask, Docker
+
+Open Source Contribution - DataFlow Library
+- Contributed data validation module to an open-source data pipeline library
+- Added 15 unit tests and improved documentation
+- Technologies: Python, pytest, Sphinx
+
+EDUCATION
+
+B.Sc. Computer Science | State University | 2020
+- GPA: 3.7/4.0
+- Relevant coursework: Data Structures, Algorithms, Machine Learning, Databases
+
+CERTIFICATIONS
+- AWS Certified Cloud Practitioner (2023)
+- Python Professional Certificate - Coursera (2021)

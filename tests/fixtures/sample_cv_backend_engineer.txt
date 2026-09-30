@@ -1,0 +1,55 @@
+[SYNTHETIC - FOR TESTING/EVALUATION ONLY - NOT A REAL CV]
+
+Carlos Rivera
+Email: carlos.r@example.com | Phone: (555) 444-5555
+
+SUMMARY
+Backend engineer with 5 years of experience building high-throughput distributed systems.
+Expert in Java, Go, and cloud-native architectures. Passionate about system design
+and API performance optimization.
+
+SKILLS
+Java, Go, Python, Spring Boot, gRPC, REST APIs, PostgreSQL, Redis, Kafka,
+RabbitMQ, Docker, Kubernetes, AWS (EC2, S3, Lambda, RDS, SQS), Terraform,
+CI/CD, Git, Microservices, System Design, Load Testing, Monitoring (Prometheus, Grafana)
+
+EXPERIENCE
+
+Senior Backend Engineer | CloudScale Inc. | Apr 2022 - Present
+- Designed and built a real-time event processing pipeline handling 100K events/sec using Kafka and Go
+- Led migration from monolithic Spring Boot app to 12 microservices, reducing p99 latency by 45%
+- Implemented circuit breaker and retry patterns improving system resilience to 99.95% uptime
+- Mentored team of 4 engineers on distributed systems best practices and code review standards
+
+Backend Engineer | PaymentFlow | Aug 2020 - Mar 2022
+- Built RESTful payment processing APIs in Java/Spring Boot handling $2M daily transaction volume
+- Designed PostgreSQL schema optimization reducing query times by 60% on 50M+ row tables
+- Implemented Redis caching layer reducing database load by 35%
+- Set up CI/CD pipeline with Jenkins and Docker reducing deployment time from 2 hours to 15 minutes
+
+Software Developer | WebCorp | Jun 2019 - Jul 2020
+- Developed REST APIs for an inventory management system serving 500 concurrent users
+- Wrote integration tests achieving 90% code coverage using JUnit and Mockito
+- Built automated data migration scripts processing 10M records using Python
+
+PROJECTS
+
+Distributed Task Queue
+- Built an open-source distributed task queue in Go with Redis backend
+- Supports priority queues, delayed tasks, and dead-letter handling
+- 200+ GitHub stars
+- Technologies: Go, Redis, Docker
+
+API Gateway
+- Designed a lightweight API gateway with rate limiting and JWT authentication
+- Handles 10K requests/sec with sub-5ms overhead
+- Technologies: Go, Redis, Docker
+
+EDUCATION
+
+B.Sc. Computer Engineering | Technical University | 2019
+- GPA: 3.6/4.0
+
+CERTIFICATIONS
+- AWS Solutions Architect Associate (2023)
+- Kubernetes Certified Developer (CKAD) (2022)
