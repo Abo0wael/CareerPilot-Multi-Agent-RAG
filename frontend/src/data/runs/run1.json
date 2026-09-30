@@ -1,0 +1,1611 @@
+{
+  "timestamp": "2026-10-01 00:35:37",
+  "fixtures_evaluated": 6,
+  "config": {
+    "fast_model": "openai/gpt-oss-20b",
+    "agent_model": "openai/gpt-oss-120b",
+    "profile_model": "openai/gpt-oss-20b",
+    "gap_model": "openai/gpt-oss-120b",
+    "tailor_model": "openai/gpt-oss-20b",
+    "verifier_model": "openai/gpt-oss-120b",
+    "reasoning_effort": "low",
+    "deployed_expansion_weight": null,
+    "bm25_top_n_chunks": 50
+  },
+  "family_keywords": {
+    "backend": [
+      "backend",
+      "back-end",
+      "back end",
+      "java",
+      "python",
+      "golang",
+      "go",
+      "distributed",
+      "api",
+      "microservices",
+      "server",
+      "software engineer",
+      "software developer",
+      "c++",
+      ".net",
+      "c#"
+    ],
+    "data_analyst": [
+      "analyst",
+      "analytics",
+      "business intelligence",
+      "bi",
+      "tableau",
+      "power bi",
+      "sql",
+      "reporting",
+      "insights"
+    ],
+    "data_scientist": [
+      "data scientist",
+      "data science",
+      "machine learning",
+      "ml",
+      "ai",
+      "artificial intelligence",
+      "nlp",
+      "computer vision",
+      "statistician",
+      "deep learning"
+    ],
+    "devops": [
+      "devops",
+      "cloud",
+      "infrastructure",
+      "sre",
+      "site reliability",
+      "platform",
+      "kubernetes",
+      "k8s",
+      "aws",
+      "terraform",
+      "systems administrator",
+      "linux"
+    ],
+    "frontend": [
+      "frontend",
+      "front-end",
+      "front end",
+      "react",
+      "ui",
+      "ux",
+      "web",
+      "javascript",
+      "typescript",
+      "angular",
+      "vue",
+      "css",
+      "html"
+    ],
+    "software_engineer": [
+      "software engineer",
+      "software developer",
+      "programmer",
+      "software",
+      "full stack",
+      "fullstack",
+      "full-stack",
+      "applications developer",
+      "developer"
+    ]
+  },
+  "family_keywords_added_after_inspection": {
+    "data_scientist": [
+      "scientist"
+    ],
+    "frontend": [
+      "reactjs",
+      "react.js",
+      "user interface"
+    ]
+  },
+  "retrieval": {
+    "macro_precision_at_10": {
+      "sections_bm25": 0.633,
+      "whole_bm25": 0.65,
+      "sections_exp_or": 0.717,
+      "sections_exp_weighted": 0.6,
+      "full_pipeline": 0.733
+    },
+    "macro_precision_at_10_original_label": {
+      "sections_bm25": 0.617,
+      "whole_bm25": 0.633,
+      "sections_exp_or": 0.667,
+      "sections_exp_weighted": 0.583,
+      "full_pipeline": 0.7
+    },
+    "per_profile": [
+      {
+        "fixture": "sample_cv_backend_engineer.txt",
+        "family": "backend",
+        "profile_skills_used_in_query": [
+          "Java",
+          "Go",
+          "Python",
+          "Spring Boot",
+          "gRPC"
+        ],
+        "sections_bm25": {
+          "precision_at_10": 0.6,
+          "precision_at_10_original_label": 0.6,
+          "top10_titles": [
+            "Java Developer",
+            "Site Reliability Engineer / Production Support - Need Local Candidate only",
+            "Associate, Java/J2EE Backend Developer",
+            "Full Stack Java Developer",
+            "Senior Java Developer",
+            "Senior Site Reliability Engineer",
+            "Site Reliability Engineer",
+            "java developer",
+            "Lead Java Full Stack Developer",
+            "Platform Engineer"
+          ],
+          "top10_relevant": [
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false
+          ]
+        },
+        "whole_bm25": {
+          "precision_at_10": 0.9,
+          "precision_at_10_original_label": 0.9,
+          "top10_titles": [
+            "Sr Java Developer on w2",
+            "Senior Java Developer",
+            "Platform Engineer",
+            "java developer",
+            "Java Developer with AWS",
+            "Full Stack Java Developer",
+            "Software Developer",
+            "Java Leads /Sr. Java Full Stack Developer",
+            "Java Architect/Lead",
+            "EX : Capital One only -  Java Developer - onsite to Richmond, VA; New York City, NY; Philadelphia, PA OR Mclean, VA"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "sections_exp_or": {
+          "precision_at_10": 0.7,
+          "precision_at_10_original_label": 0.7,
+          "top10_titles": [
+            "Senior Software Engineer",
+            "Senior Java Engineer (API/AWS)",
+            "Infrastructure API Engineer",
+            "AWS Devops Engineer",
+            "Full Stack Engineer",
+            "Full Stack Engineer",
+            "Sr Java Developer on w2",
+            "Solutions Architect (Java)",
+            "Software Engineer",
+            "Java Developer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "raw_query": "Java Go Python Spring Boot gRPC",
+        "expanded_terms": [
+          "Spring Cloud",
+          "Kubernetes",
+          "Docker",
+          "Protocol Buffers",
+          "Microservices",
+          "CI/CD"
+        ],
+        "sections_exp_weighted": {
+          "precision_at_10": 0.7,
+          "precision_at_10_original_label": 0.7,
+          "top10_titles": [
+            "Sr Java Developer on w2",
+            "Java Developer",
+            "Site Reliability Engineer / Production Support - Need Local Candidate only",
+            "Associate, Java/J2EE Backend Developer",
+            "Full Stack Java Developer",
+            "Senior Java Developer",
+            "Senior Site Reliability Engineer",
+            "Site Reliability Engineer",
+            "java developer",
+            "Lead Java Full Stack Developer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true
+          ]
+        },
+        "full_pipeline": {
+          "precision_at_10": 0.6,
+          "precision_at_10_original_label": 0.6,
+          "top10_titles": [
+            "Senior Java Engineer (API/AWS)",
+            "Platform Engineer",
+            "Java Developer",
+            "Senior Software Engineer",
+            "Java Architect",
+            "Full Stack Engineer",
+            "Solutions Architect (Java)",
+            "Full Stack Engineer",
+            "Freelance Principal Software Engineer [74452]",
+            "Technical Lead"
+          ],
+          "top10_relevant": [
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            true,
+            false
+          ]
+        }
+      },
+      {
+        "fixture": "sample_cv_data_analyst.txt",
+        "family": "data_analyst",
+        "profile_skills_used_in_query": [
+          "SQL",
+          "Python",
+          "Excel",
+          "Tableau",
+          "Power BI"
+        ],
+        "sections_bm25": {
+          "precision_at_10": 0.7,
+          "precision_at_10_original_label": 0.7,
+          "top10_titles": [
+            "Business Data Analyst",
+            "Senior Power BI Developer",
+            "Technical Lead",
+            "Senior Software Engineer",
+            "Business Intelligence Developer",
+            "Senior Data Analyst- Scientist",
+            "Data Governance Engineer",
+            "Business Intelligence Engineer, ACES Analytics",
+            "Manager, Soccer Analytics & Data Science",
+            "Business Intelligence Developer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true
+          ]
+        },
+        "whole_bm25": {
+          "precision_at_10": 0.6,
+          "precision_at_10_original_label": 0.6,
+          "top10_titles": [
+            "Senior Software Engineer",
+            "Technical Lead",
+            "Business Intelligence Developer",
+            "Senior Power BI Developer",
+            "Senior Data Analyst- Scientist",
+            "Power BI Developer-W2",
+            "Data Engineering Analyst",
+            "System Engineer",
+            "Business Intelligence Developer",
+            "Azure Data Engineer- Technical Lead"
+          ],
+          "top10_relevant": [
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false
+          ]
+        },
+        "sections_exp_or": {
+          "precision_at_10": 0.8,
+          "precision_at_10_original_label": 0.8,
+          "top10_titles": [
+            "Power BI Developer",
+            "Data Governance Analyst 1/2 - Hybrid - Des Moines, IA",
+            "Senior Power BI Developer",
+            "Data Engineer III",
+            "Business Intelligence Developer",
+            "Power Bi Developer- Only on W2",
+            "Power BI Developer",
+            "Business Intelligence Engineer",
+            "Sr Python Developer",
+            "Power BI Data Engineer, Semantic Layer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            true,
+            false,
+            true
+          ]
+        },
+        "raw_query": "SQL Python Excel Tableau Power BI",
+        "expanded_terms": [
+          "Pandas",
+          "SQLAlchemy",
+          "Power Query",
+          "DAX",
+          "Tableau Prep",
+          "Power BI Service"
+        ],
+        "sections_exp_weighted": {
+          "precision_at_10": 0.8,
+          "precision_at_10_original_label": 0.8,
+          "top10_titles": [
+            "Senior Power BI Developer",
+            "Business Intelligence Developer",
+            "Data Governance Analyst 1/2 - Hybrid - Des Moines, IA",
+            "Power BI Developer",
+            "Data Engineer III",
+            "Sr Microsoft Power BI Developer",
+            "Financial Data Analyst",
+            "Power BI SQL Developer",
+            "Data Engineering Analyst",
+            "PowerBI Developer in Jersey City, NJ"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        "full_pipeline": {
+          "precision_at_10": 0.8,
+          "precision_at_10_original_label": 0.8,
+          "top10_titles": [
+            "Power BI Developer",
+            "Senior Power BI Developer",
+            "Power Bi Developer- Only on W2",
+            "Power BI Developer",
+            "Sr Python Developer",
+            "Senior Power BI Developer",
+            "Business Intelligence Developer",
+            "Data Governance Analyst 1/2 - Hybrid - Des Moines, IA",
+            "PowerBI Developer",
+            "Sr. Power BI Developer (with expertise in Spotfire)"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            false,
+            true
+          ]
+        }
+      },
+      {
+        "fixture": "sample_cv_data_scientist.txt",
+        "family": "data_scientist",
+        "profile_skills_used_in_query": [
+          "Python",
+          "R",
+          "SQL",
+          "Tableau",
+          "Power BI"
+        ],
+        "sections_bm25": {
+          "precision_at_10": 0.1,
+          "precision_at_10_original_label": 0.0,
+          "top10_titles": [
+            "Senior Power BI Developer",
+            "Business Intelligence Developer",
+            "Data Governance Engineer",
+            "Business Data Analyst",
+            "Technical Lead",
+            "Senior Software Engineer",
+            "Data Analyst Strategist & Technology Engineer",
+            "Senior Data Analyst- Scientist",
+            "Power BI SQL Developer",
+            "Product Data Analyst"
+          ],
+          "top10_relevant": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false
+          ]
+        },
+        "whole_bm25": {
+          "precision_at_10": 0.2,
+          "precision_at_10_original_label": 0.1,
+          "top10_titles": [
+            "Business Intelligence Developer",
+            "Senior Software Engineer",
+            "Technical Lead",
+            "Senior Power BI Developer",
+            "System Engineer",
+            "Senior Data Analyst- Scientist",
+            "Data Scientist (Human Services experience)",
+            "Data Engineering Analyst",
+            "Business Intelligence Developer",
+            "Power BI Developer-W2"
+          ],
+          "top10_relevant": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            false
+          ]
+        },
+        "sections_exp_or": {
+          "precision_at_10": 0.8,
+          "precision_at_10_original_label": 0.8,
+          "top10_titles": [
+            "Python Developer with AI/ML Skills",
+            "Data Scientist",
+            "Data Scientist",
+            "Data Scientist",
+            "Python Developer with AI/ML",
+            "Senior Power BI Developer",
+            "Data Scientist - GenAI - Solution Specialist - Hybrid",
+            "Business Intelligence Developer",
+            "Data Scientist I",
+            "Machine Learning Engineer- 10+year exp*"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true
+          ]
+        },
+        "raw_query": "Python R SQL Tableau Power BI",
+        "expanded_terms": [
+          "Pandas",
+          "NumPy",
+          "Scikit-learn",
+          "SQLAlchemy",
+          "Power Query",
+          "Tableau Prep"
+        ],
+        "sections_exp_weighted": {
+          "precision_at_10": 0.2,
+          "precision_at_10_original_label": 0.1,
+          "top10_titles": [
+            "Senior Power BI Developer",
+            "Business Intelligence Developer",
+            "Data Scientist",
+            "Data Governance Engineer",
+            "Business Data Analyst",
+            "Technical Lead",
+            "Senior Software Engineer",
+            "Data Analyst Strategist & Technology Engineer",
+            "Senior Data Analyst- Scientist",
+            "Power BI SQL Developer"
+          ],
+          "top10_relevant": [
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            false
+          ]
+        },
+        "full_pipeline": {
+          "precision_at_10": 0.6,
+          "precision_at_10_original_label": 0.6,
+          "top10_titles": [
+            "Data Scientist",
+            "Data Scientist I",
+            "Data Scientist",
+            "Senior Power BI Developer",
+            "Lead Python Software Engineer",
+            "Data Scientist - GenAI - Solution Specialist - Hybrid",
+            "Business Intelligence Developer",
+            "Machine Learning Engineer- 10+year exp*",
+            "Content Development | Data Science & NLP",
+            "Sr Python Developer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            false
+          ]
+        }
+      },
+      {
+        "fixture": "sample_cv_devops_engineer.txt",
+        "family": "devops",
+        "profile_skills_used_in_query": [
+          "AWS",
+          "Terraform",
+          "Ansible",
+          "Docker",
+          "Kubernetes"
+        ],
+        "sections_bm25": {
+          "precision_at_10": 0.8,
+          "precision_at_10_original_label": 0.8,
+          "top10_titles": [
+            "Software Development Engineer",
+            "Platform Engineer",
+            "Technical Lead",
+            "DevOps Architect",
+            "AWS/Azure Senior Developer with Kubernetes",
+            "DevOps Architect",
+            "Senior Infrastructure Engineer",
+            "DevOps/Site Reliability Engineering (SRE) - Linux - REMOTE",
+            "DevOps Engineer with AWS",
+            "Principal Engineer Software - Cloud and Applications (Melbourne FL)"
+          ],
+          "top10_relevant": [
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "whole_bm25": {
+          "precision_at_10": 0.8,
+          "precision_at_10_original_label": 0.8,
+          "top10_titles": [
+            "Platform Engineer",
+            "Senior Software Engineer",
+            "Site Reliability Engineer",
+            "AWS/Azure Senior Developer with Kubernetes",
+            "Technical Lead",
+            "DevOps Architect",
+            "Cloud Support Engineer",
+            "DevOps Engineer",
+            "Cloud DBA (Postgres with Terraform)",
+            "SR Cloud DBA"
+          ],
+          "top10_relevant": [
+            true,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "sections_exp_or": {
+          "precision_at_10": 0.6,
+          "precision_at_10_original_label": 0.6,
+          "top10_titles": [
+            "Technical Lead",
+            "Enterprise Network Engineer",
+            "Senior Software Engineer",
+            "AWS Cloud Infrastructure and DevOps Technical SME",
+            "DevOps Engineer",
+            "Senior Full Stack Lead Engineer (JavaScript, TypeScript, Angular, Java, AWS)",
+            "Senior Full Stack Lead Engineer (JavaScript, TypeScript, Angular, Java, AWS)",
+            "Senior Full Stack Lead Engineer (JavaScript, TypeScript, Angular, Java, AWS)",
+            "DevOps Consultant",
+            "Golang Developer"
+          ],
+          "top10_relevant": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        "raw_query": "AWS Terraform Ansible Docker Kubernetes",
+        "expanded_terms": [
+          "AWS CloudFormation",
+          "Terraform modules",
+          "Ansible Playbooks",
+          "Docker Compose",
+          "Kubernetes Helm",
+          "CI/CD pipelines"
+        ],
+        "sections_exp_weighted": {
+          "precision_at_10": 0.6,
+          "precision_at_10_original_label": 0.6,
+          "top10_titles": [
+            "Technical Lead",
+            "Software Development Engineer",
+            "Platform Engineer",
+            "DevOps Engineer",
+            "Senior Software Engineer",
+            "Golang Developer",
+            "DevOps Consultant",
+            "DevOps/Site Reliability Engineering (SRE) - Linux - REMOTE",
+            "AWS Cloud Infrastructure and DevOps Technical SME",
+            "DevOps Engineer with AWS"
+          ],
+          "top10_relevant": [
+            false,
+            false,
+            true,
+            true,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "full_pipeline": {
+          "precision_at_10": 0.6,
+          "precision_at_10_original_label": 0.6,
+          "top10_titles": [
+            "Platform Engineer",
+            "Senior Software Engineer - Kubernetes (1927890)",
+            "DevOps Consultant",
+            "Lead Platform Engineer",
+            "DevOps Engineer",
+            "Software Engineer",
+            "Senior AWS Engineer",
+            "Golang Developer",
+            "Software Engineer for global computer software company in Redmond, WA.",
+            "Lead ML Ops Engineer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            false,
+            false
+          ]
+        }
+      },
+      {
+        "fixture": "sample_cv_frontend_entry_level.txt",
+        "family": "frontend",
+        "profile_skills_used_in_query": [
+          "HTML",
+          "CSS",
+          "JavaScript",
+          "TypeScript",
+          "React"
+        ],
+        "sections_bm25": {
+          "precision_at_10": 0.7,
+          "precision_at_10_original_label": 0.7,
+          "top10_titles": [
+            "UI React Developer",
+            "Senior Lead Software Engineer, Front End",
+            "Professional Software Engineer",
+            "Senior Software Engineer, Front End",
+            "Lead Software Engineer, Front End",
+            "Lead Software Engineer, Front End",
+            "Lead Software Engineer, Front End",
+            "Web Developer",
+            "Software Engineer",
+            "Data Engineer/ETL"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        },
+        "whole_bm25": {
+          "precision_at_10": 0.5,
+          "precision_at_10_original_label": 0.5,
+          "top10_titles": [
+            "Front Web Developer - .net and EcmaScript",
+            "UI React Developer",
+            "Angular Developer/Lead",
+            "Data Engineer/ETL",
+            "Mobile Software Engineer",
+            "Professional Software Engineer",
+            "Lead Front End Developer",
+            "Software Engineer",
+            "Junior Fullstack Software Engineer",
+            "Frontend Developer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            true
+          ]
+        },
+        "sections_exp_or": {
+          "precision_at_10": 0.6,
+          "precision_at_10_original_label": 0.3,
+          "top10_titles": [
+            "React Front End Developer - Remote",
+            "Web Developer",
+            "Senior Software Engineer",
+            "Technical Lead",
+            "Professional Software Engineer",
+            "Sr ReactJs Developer",
+            "Software Engineer",
+            "Senior ReactJS Developer",
+            "Sr React JS Developer",
+            "User Interface Architect"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true
+          ]
+        },
+        "raw_query": "HTML CSS JavaScript TypeScript React",
+        "expanded_terms": [
+          "Next.js",
+          "Redux",
+          "GraphQL",
+          "Tailwind CSS",
+          "Jest",
+          "Webpack"
+        ],
+        "sections_exp_weighted": {
+          "precision_at_10": 0.5,
+          "precision_at_10_original_label": 0.5,
+          "top10_titles": [
+            "Web Developer",
+            "Professional Software Engineer",
+            "React Front End Developer - Remote",
+            "Senior Software Engineer",
+            "Technical Lead",
+            "Software Engineer",
+            "UI Developer/Designer",
+            "Senior Shopify Developer (1927805)",
+            "UI React Developer",
+            "Senior Lead Software Engineer, Front End"
+          ],
+          "top10_relevant": [
+            true,
+            false,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false,
+            true,
+            true
+          ]
+        },
+        "full_pipeline": {
+          "precision_at_10": 0.8,
+          "precision_at_10_original_label": 0.6,
+          "top10_titles": [
+            "React Front End Developer - Remote",
+            "React Developer",
+            "User Interface Architect",
+            "Sr React JS Developer",
+            "Web Developer",
+            "UI React Developer",
+            "Frontend Developer React",
+            "Sr ReactJs Developer",
+            "Software Engineer",
+            "Senior Software Engineer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false,
+            false
+          ]
+        }
+      },
+      {
+        "fixture": "sample_cv_software_engineer.txt",
+        "family": "software_engineer",
+        "profile_skills_used_in_query": [
+          "Python",
+          "JavaScript",
+          "TypeScript",
+          "React",
+          "Node.js"
+        ],
+        "sections_bm25": {
+          "precision_at_10": 0.9,
+          "precision_at_10_original_label": 0.9,
+          "top10_titles": [
+            "Principal Software Engineer",
+            "Senior Full Stack Developer (NJUS)",
+            "Lead Front End Developer",
+            "Shopify App Developer",
+            "UI Developer/Designer",
+            "Data Engineer/ETL",
+            "Java Full stack developer at Onsite ( Full Time )",
+            "Full Stack Developer",
+            "Full-Stack JavaScript Developer in Louisville, KY (Hybrid)",
+            "Senior Software Engineer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "whole_bm25": {
+          "precision_at_10": 0.9,
+          "precision_at_10_original_label": 0.9,
+          "top10_titles": [
+            "Principal Software Engineer",
+            "Senior Full Stack Developer",
+            "Full Stack Developer",
+            "Lead Front End Developer",
+            "Full Stack Engineer",
+            "Junior Fullstack Software Engineer",
+            "Senior Full Stack Developer (NJUS)",
+            "Data Engineer/ETL",
+            "Full Stack Developer (Sr. NodeJS)",
+            "UI Developer (Full Time)"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false,
+            true,
+            true
+          ]
+        },
+        "sections_exp_or": {
+          "precision_at_10": 0.8,
+          "precision_at_10_original_label": 0.8,
+          "top10_titles": [
+            "Full Stack Developer",
+            "Professional Software Engineer",
+            "Full stack developer (SQL/NoSQL/Bigquery)",
+            "Senior Full Stack Developer (NJUS)",
+            "Senior Software Engineer",
+            "Technical Lead",
+            "Senior Software Engineer (NodeJS +.Net)",
+            "Senior Software Engineer",
+            "Technical Lead",
+            "Full Stack Engineer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            false,
+            true,
+            true,
+            false,
+            true
+          ]
+        },
+        "raw_query": "Python JavaScript TypeScript React Node.js",
+        "expanded_terms": [
+          "Django",
+          "Express",
+          "GraphQL",
+          "Redux",
+          "Next.js",
+          "Docker"
+        ],
+        "sections_exp_weighted": {
+          "precision_at_10": 0.8,
+          "precision_at_10_original_label": 0.8,
+          "top10_titles": [
+            "Full Stack Developer",
+            "Java Full stack developer at Onsite ( Full Time )",
+            "Senior Software Engineer",
+            "Technical Lead",
+            "Senior Software Engineer",
+            "Technical Lead",
+            "Full Stack Engineer",
+            "Principal Software Engineer",
+            "Senior Full Stack Developer (NJUS)",
+            "Lead Front End Developer"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            false,
+            true,
+            false,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        "full_pipeline": {
+          "precision_at_10": 1.0,
+          "precision_at_10_original_label": 1.0,
+          "top10_titles": [
+            "Full Stack Developer",
+            "Senior Full Stack Developer (NJUS)",
+            "Full Stack Engineer",
+            "NodeJS Backend Developer",
+            "Senior Software Engineer",
+            "Full stack developer (SQL/NoSQL/Bigquery)",
+            "Software Engineer",
+            "Java Full stack developer at Onsite ( Full Time )",
+            "Software Engineer, Automation & Tooling",
+            "Senior Software Engineer (NodeJS +.Net)"
+          ],
+          "top10_relevant": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      }
+    ]
+  },
+  "llm_steps": {
+    "gap_analysis": {
+      "requests": 6,
+      "groq_calls": 5,
+      "cache_hits": 1,
+      "prompt_tokens": 5003,
+      "completion_tokens": 5609,
+      "total_tokens": 10612,
+      "tokens_per_groq_call": 2122,
+      "avg_latency_s": 6.19,
+      "max_latency_s": 11.27,
+      "rate_limit_429s": 0
+    },
+    "profile_extraction": {
+      "requests": 6,
+      "groq_calls": 5,
+      "cache_hits": 1,
+      "prompt_tokens": 4702,
+      "completion_tokens": 2395,
+      "total_tokens": 7097,
+      "tokens_per_groq_call": 1419,
+      "avg_latency_s": 0.72,
+      "max_latency_s": 1.02,
+      "rate_limit_429s": 0
+    },
+    "query_expansion": {
+      "requests": 24,
+      "groq_calls": 1,
+      "cache_hits": 23,
+      "prompt_tokens": 222,
+      "completion_tokens": 95,
+      "total_tokens": 317,
+      "tokens_per_groq_call": 317,
+      "avg_latency_s": 0.01,
+      "max_latency_s": 0.2,
+      "rate_limit_429s": 0
+    },
+    "rerank": {
+      "requests": 12,
+      "groq_calls": 1,
+      "cache_hits": 11,
+      "prompt_tokens": 3471,
+      "completion_tokens": 768,
+      "total_tokens": 4239,
+      "tokens_per_groq_call": 4239,
+      "avg_latency_s": 0.1,
+      "max_latency_s": 1.2,
+      "rate_limit_429s": 0
+    },
+    "tailoring": {
+      "requests": 6,
+      "groq_calls": 5,
+      "cache_hits": 1,
+      "prompt_tokens": 4294,
+      "completion_tokens": 3713,
+      "total_tokens": 8007,
+      "tokens_per_groq_call": 1601,
+      "avg_latency_s": 0.93,
+      "max_latency_s": 1.38,
+      "rate_limit_429s": 0
+    },
+    "verification": {
+      "requests": 12,
+      "groq_calls": 11,
+      "cache_hits": 1,
+      "prompt_tokens": 11894,
+      "completion_tokens": 5279,
+      "total_tokens": 17173,
+      "tokens_per_groq_call": 1561,
+      "avg_latency_s": 8.58,
+      "max_latency_s": 17.64,
+      "rate_limit_429s": 0
+    }
+  },
+  "faithfulness": {
+    "per_profile": [
+      {
+        "fixture": "sample_cv_backend_engineer.txt",
+        "job_id": 3901979256,
+        "job_title": "Senior Java Engineer (API/AWS)",
+        "gap_matched": 11,
+        "gap_missing": 6,
+        "claims": 10,
+        "supported": 8,
+        "unsupported": 2,
+        "unverified": 0,
+        "removed_bullets": [
+          "[Senior Backend Engineer at CloudScale Inc.] Designed and built a real‑time event processing pipeline handling 100K events/sec using Kafka and Go, demonstrating expertise in high‑throughput Java‑based microservices architecture",
+          "[Software Developer at WebCorp] Developed REST APIs for an inventory management system serving 500 concurrent users, highlighting experience with Java/Spring Boot API development"
+        ]
+      },
+      {
+        "fixture": "sample_cv_data_analyst.txt",
+        "job_id": 3904949340,
+        "job_title": "Power BI Developer",
+        "gap_matched": 5,
+        "gap_missing": 5,
+        "claims": 9,
+        "supported": 2,
+        "unsupported": 7,
+        "unverified": 0,
+        "removed_bullets": [
+          "[Data Analyst at RetailTech Solutions] Created weekly sales dashboards in Power BI tracking KPIs across 15 retail locations, demonstrating strong data visualization skills",
+          "[Data Analyst at RetailTech Solutions] Wrote complex SQL queries analyzing 2M+ transaction records to identify purchasing trends, supporting Power BI data modeling and integration",
+          "[Data Analyst at RetailTech Solutions] Reduced report generation time by 40% by automating data extraction workflows, improving data availability for Power BI dashboards",
+          "[Data Analyst at RetailTech Solutions] Collaborated with marketing team to design A/B tests for email campaigns, translating results into actionable Power BI insights",
+          "[Business Intelligence Intern at DataCo Analytics] Generated monthly executive reports summarizing key business metrics, leveraging Power BI Service for distribution",
+          "[Project: Sales Forecasting Model] Developed time series forecasting model using Prophet for quarterly sales predictions, integrating results into Power BI dashboards for executive decision-making",
+          "[Project: Customer Churn Analysis] Analyzed subscription data to identify factors driving customer churn, visualizing findings in Power BI to support retention strategies"
+        ]
+      },
+      {
+        "fixture": "sample_cv_data_scientist.txt",
+        "job_id": 3904389544,
+        "job_title": "Data Scientist",
+        "gap_matched": 16,
+        "gap_missing": 14,
+        "claims": 8,
+        "supported": 8,
+        "unsupported": 0,
+        "unverified": 0,
+        "removed_bullets": []
+      },
+      {
+        "fixture": "sample_cv_devops_engineer.txt",
+        "job_id": 3901346380,
+        "job_title": "Platform Engineer",
+        "gap_matched": 10,
+        "gap_missing": 6,
+        "claims": 10,
+        "supported": 10,
+        "unsupported": 0,
+        "unverified": 0,
+        "removed_bullets": []
+      },
+      {
+        "fixture": "sample_cv_frontend_entry_level.txt",
+        "job_id": 3900943289,
+        "job_title": "React Front End Developer - Remote",
+        "gap_matched": 5,
+        "gap_missing": 4,
+        "claims": 10,
+        "supported": 8,
+        "unsupported": 2,
+        "unverified": 0,
+        "removed_bullets": [
+          "[Project: E‑Commerce Store (Capstone Project)] Built full‑stack e‑commerce application with React, Node.js, and MongoDB, implementing responsive product interfaces",
+          "[Project: Weather Dashboard] Created real‑time weather dashboard consuming OpenWeatherMap API, showcasing dynamic data rendering in React"
+        ]
+      },
+      {
+        "fixture": "sample_cv_software_engineer.txt",
+        "job_id": 3905847637,
+        "job_title": "Full Stack Developer",
+        "gap_matched": 15,
+        "gap_missing": 6,
+        "claims": 9,
+        "supported": 9,
+        "unsupported": 0,
+        "unverified": 0,
+        "removed_bullets": []
+      }
+    ],
+    "claims": 56,
+    "supported": 45,
+    "unsupported": 11,
+    "unverified": 0,
+    "supported_rate": 0.804
+  },
+  "adversarial": {
+    "summary": {
+      "control_specificity": {
+        "supported": 24,
+        "total": 24,
+        "rate": 1.0,
+        "false_alarms_unsupported": 0,
+        "unverified": 0
+      },
+      "fake_certification": {
+        "caught": 6,
+        "total": 6,
+        "recall": 1.0
+      },
+      "fake_skill": {
+        "caught": 6,
+        "total": 6,
+        "recall": 1.0
+      },
+      "fake_employer": {
+        "caught": 6,
+        "total": 6,
+        "recall": 1.0
+      },
+      "fake_metric": {
+        "caught": 6,
+        "total": 6,
+        "recall": 1.0
+      },
+      "planted_overall": {
+        "caught": 24,
+        "total": 24,
+        "recall": 1.0
+      }
+    },
+    "per_profile": [
+      {
+        "fixture": "sample_cv_backend_engineer.txt",
+        "rows": [
+          {
+            "type": "control",
+            "bullet": "Technologies: Go, Redis, Docker",
+            "verdict": "supported",
+            "evidence": "SKILLS list includes Go, Redis, Docker"
+          },
+          {
+            "type": "control",
+            "bullet": "Designed PostgreSQL schema optimization reducing query times by 60% on 50M+ row tables",
+            "verdict": "supported",
+            "evidence": "\"Designed PostgreSQL schema optimization reducing query times by 60% on 50M+ row tables\" under Backend Engineer | PaymentFlow"
+          },
+          {
+            "type": "control",
+            "bullet": "AWS Solutions Architect Associate (2023)",
+            "verdict": "supported",
+            "evidence": "CERTIFICATIONS list includes \"AWS Solutions Architect Associate (2023)\""
+          },
+          {
+            "type": "fake_certification",
+            "bullet": "GPA: 3.6/4.0, and earned the Google Professional Cloud Architect certification",
+            "verdict": "unsupported",
+            "evidence": "Google Professional Cloud Architect certification not mentioned in original CV"
+          },
+          {
+            "type": "fake_skill",
+            "bullet": "Wrote integration tests achieving 90% code coverage using JUnit and Mockito, using Rust and Elixir",
+            "verdict": "unsupported",
+            "evidence": "Original mentions JUnit and Mockito only; Rust and Elixir are not present"
+          },
+          {
+            "type": "fake_employer",
+            "bullet": "Designed a lightweight API gateway with rate limiting and JWT authentication, while on contract at Goldman Sachs",
+            "verdict": "unsupported",
+            "evidence": "No reference to Goldman Sachs or contract work in original CV"
+          },
+          {
+            "type": "fake_metric",
+            "bullet": "200+ GitHub stars, cutting infrastructure costs by 73%",
+            "verdict": "unsupported",
+            "evidence": "Infrastructure cost reduction claim (73%) not present in original CV"
+          },
+          {
+            "type": "control",
+            "bullet": "Built RESTful payment processing APIs in Java/Spring Boot handling $2M daily transaction volume",
+            "verdict": "supported",
+            "evidence": "\"Built RESTful payment processing APIs in Java/Spring Boot handling $2M daily transaction volume\" under Backend Engineer | PaymentFlow"
+          }
+        ]
+      },
+      {
+        "fixture": "sample_cv_data_analyst.txt",
+        "rows": [
+          {
+            "type": "control",
+            "bullet": "Built a decision tree model achieving 78% accuracy in predicting churn risk",
+            "verdict": "supported",
+            "evidence": "Built a decision tree model achieving 78% accuracy in predicting churn risk"
+          },
+          {
+            "type": "fake_certification",
+            "bullet": "GPA: 3.5/4.0, and earned the Google Professional Cloud Architect certification",
+            "verdict": "unsupported",
+            "evidence": "Google Professional Cloud Architect certification not mentioned in original CV"
+          },
+          {
+            "type": "control",
+            "bullet": "Developed time series forecasting model using Prophet for quarterly sales predictions",
+            "verdict": "supported",
+            "evidence": "Developed time series forecasting model using Prophet for quarterly sales predictions"
+          },
+          {
+            "type": "fake_metric",
+            "bullet": "Relevant coursework: Statistics, Database Management, Data Mining, Business Intelligence, cutting infrastructure costs by 73%",
+            "verdict": "unsupported",
+            "evidence": "cutting infrastructure costs by 73% not mentioned in original CV"
+          },
+          {
+            "type": "fake_skill",
+            "bullet": "Analyzed subscription data to identify factors driving customer churn, using Rust and Elixir",
+            "verdict": "unsupported",
+            "evidence": "use of Rust and Elixir not mentioned in original CV"
+          },
+          {
+            "type": "fake_employer",
+            "bullet": "Wrote complex SQL queries analyzing 2M+ transaction records to identify purchasing trends, while on contract at Goldman Sachs",
+            "verdict": "unsupported",
+            "evidence": "contract at Goldman Sachs not mentioned in original CV"
+          },
+          {
+            "type": "control",
+            "bullet": "Collaborated with marketing team to design A/B tests for email campaigns",
+            "verdict": "supported",
+            "evidence": "Collaborated with marketing team to design A/B tests for email campaigns"
+          },
+          {
+            "type": "control",
+            "bullet": "Achieved MAPE of 8.2% on test data across 15 store locations",
+            "verdict": "supported",
+            "evidence": "Achieved MAPE of 8.2% on test data across 15 store locations"
+          }
+        ]
+      },
+      {
+        "fixture": "sample_cv_data_scientist.txt",
+        "rows": [
+          {
+            "type": "fake_metric",
+            "bullet": "Analyzed customer churn data for a SaaS product, identifying 5 key risk factors, cutting infrastructure costs by 73%",
+            "verdict": "unsupported",
+            "evidence": "adds \"cutting infrastructure costs by 73%\" which is not in the original CV"
+          },
+          {
+            "type": "fake_skill",
+            "bullet": "GPA: 3.9/4.0, using Rust and Elixir",
+            "verdict": "unsupported",
+            "evidence": "adds \"using Rust and Elixir\" which are not listed in the original CV"
+          },
+          {
+            "type": "control",
+            "bullet": "Identified 4 distinct customer segments that informed marketing strategy",
+            "verdict": "supported",
+            "evidence": "Identified 4 distinct customer segments that informed marketing strategy"
+          },
+          {
+            "type": "control",
+            "bullet": "Integrated data from 3 public APIs with daily automated updates",
+            "verdict": "supported",
+            "evidence": "Integrated data from 3 public APIs with daily automated updates"
+          },
+          {
+            "type": "fake_certification",
+            "bullet": "GPA: 3.6/4.0, and earned the Google Professional Cloud Architect certification",
+            "verdict": "unsupported",
+            "evidence": "adds \"earned the Google Professional Cloud Architect certification\" which is not in the original CV"
+          },
+          {
+            "type": "control",
+            "bullet": "Created interactive Tableau dashboards for the executive team",
+            "verdict": "supported",
+            "evidence": "Created interactive Tableau dashboards for the executive team"
+          },
+          {
+            "type": "fake_employer",
+            "bullet": "Technologies: Python, scikit-learn, Matplotlib, while on contract at Goldman Sachs",
+            "verdict": "unsupported",
+            "evidence": "adds \"while on contract at Goldman Sachs\" which is not in the original CV"
+          },
+          {
+            "type": "control",
+            "bullet": "Thesis: \"Predicting Employee Attrition Using Ensemble Methods\"",
+            "verdict": "supported",
+            "evidence": "Thesis: \"Predicting Employee Attrition Using Ensemble Methods\""
+          }
+        ]
+      },
+      {
+        "fixture": "sample_cv_devops_engineer.txt",
+        "rows": [
+          {
+            "type": "control",
+            "bullet": "Migrated 30+ services to Kubernetes (EKS) with zero-downtime deployments using ArgoCD",
+            "verdict": "supported",
+            "evidence": "Migrated 30+ services to Kubernetes (EKS) with zero-downtime deployments using ArgoCD"
+          },
+          {
+            "type": "fake_skill",
+            "bullet": "Architected multi-region AWS infrastructure supporting 99.99% uptime SLA for 5M+ users, using Rust and Elixir",
+            "verdict": "unsupported",
+            "evidence": "Adds \"using Rust and Elixir\" which is not mentioned in the original CV"
+          },
+          {
+            "type": "fake_metric",
+            "bullet": "Reduced GPU idle time by 40% while maintaining job SLA, cutting infrastructure costs by 73%",
+            "verdict": "unsupported",
+            "evidence": "Adds \"cutting infrastructure costs by 73%\" not present in the original CV"
+          },
+          {
+            "type": "fake_certification",
+            "bullet": "Built custom autoscaler plugin for GPU workloads on Kubernetes, and earned the Google Professional Cloud Architect certification",
+            "verdict": "unsupported",
+            "evidence": "Adds \"earned the Google Professional Cloud Architect certification\" not listed in the original CV"
+          },
+          {
+            "type": "control",
+            "bullet": "Automated server provisioning with Ansible reducing setup time from 4 hours to 20 minutes",
+            "verdict": "supported",
+            "evidence": "Automated server provisioning with Ansible reducing setup time from 4 hours to 20 minutes"
+          },
+          {
+            "type": "control",
+            "bullet": "Managed fleet of 100+ Linux servers running production workloads",
+            "verdict": "supported",
+            "evidence": "Managed fleet of 100+ Linux servers running production workloads"
+          },
+          {
+            "type": "control",
+            "bullet": "Technologies: Go, Kubernetes, AWS",
+            "verdict": "supported",
+            "evidence": "Technologies: Go, Kubernetes, AWS"
+          },
+          {
+            "type": "fake_employer",
+            "bullet": "Created real-time cost monitoring dashboard tracking AWS spend across 5 accounts, while on contract at Goldman Sachs",
+            "verdict": "unsupported",
+            "evidence": "Adds \"while on contract at Goldman Sachs\" which is not in the original CV"
+          }
+        ]
+      },
+      {
+        "fixture": "sample_cv_frontend_entry_level.txt",
+        "rows": [
+          {
+            "type": "fake_skill",
+            "bullet": "Relevant coursework: Web Development, UI/UX Design, Data Structures,, using Rust and Elixir",
+            "verdict": "unsupported",
+            "evidence": "Original CV lists relevant coursework but does not mention using Rust or Elixir"
+          },
+          {
+            "type": "control",
+            "bullet": "Checks color contrast, alt text, heading hierarchy, and ARIA labels",
+            "verdict": "supported",
+            "evidence": "\"Checks color contrast, alt text, heading hierarchy, and ARIA labels\""
+          },
+          {
+            "type": "control",
+            "bullet": "Built responsive landing pages for 3 client projects using React and Tailwind CSS",
+            "verdict": "supported",
+            "evidence": "\"Built responsive landing pages for 3 client projects using React and Tailwind CSS\""
+          },
+          {
+            "type": "control",
+            "bullet": "Participated in code reviews and daily standups in an Agile team",
+            "verdict": "supported",
+            "evidence": "\"Participated in code reviews and daily standups in an Agile team\""
+          },
+          {
+            "type": "fake_employer",
+            "bullet": "Implemented pixel-perfect designs from Figma mockups with cross-browser compatibility, while on contract at Goldman Sachs",
+            "verdict": "unsupported",
+            "evidence": "No mention of a contract at Goldman Sachs in the original CV"
+          },
+          {
+            "type": "fake_metric",
+            "bullet": "freeCodeCamp Responsive Web Design (2023), cutting infrastructure costs by 73%",
+            "verdict": "unsupported",
+            "evidence": "Original CV includes the freeCodeCamp certification but does not claim cutting infrastructure costs by 73%"
+          },
+          {
+            "type": "fake_certification",
+            "bullet": "Built a restaurant booking system with React frontend and Firebase backend, and earned the Google Professional Cloud Architect certification",
+            "verdict": "unsupported",
+            "evidence": "Google Professional Cloud Architect certification is not listed in the original CV"
+          },
+          {
+            "type": "control",
+            "bullet": "Fixed 15+ accessibility issues to achieve WCAG 2.1 AA compliance",
+            "verdict": "supported",
+            "evidence": "\"Fixed 15+ accessibility issues to achieve WCAG 2.1 AA compliance\""
+          }
+        ]
+      },
+      {
+        "fixture": "sample_cv_software_engineer.txt",
+        "rows": [
+          {
+            "type": "fake_employer",
+            "bullet": "Implemented unit and integration tests achieving 85% code coverage, while on contract at Goldman Sachs",
+            "verdict": "unsupported",
+            "evidence": "adds employer \"Goldman Sachs\" not present in original CV"
+          },
+          {
+            "type": "fake_metric",
+            "bullet": "Wrote Python scripts for ETL pipelines processing 1M+ records daily using Pandas, cutting infrastructure costs by 73%",
+            "verdict": "unsupported",
+            "evidence": "adds metric \"cutting infrastructure costs by 73%\" not stated in original CV"
+          },
+          {
+            "type": "fake_skill",
+            "bullet": "Migrated legacy monolith to microservices architecture on AWS ECS, using Rust and Elixir",
+            "verdict": "unsupported",
+            "evidence": "adds technologies \"Rust and Elixir\" not mentioned in original CV"
+          },
+          {
+            "type": "control",
+            "bullet": "GPA: 3.7/4.0",
+            "verdict": "supported",
+            "evidence": "\"GPA: 3.7/4.0\""
+          },
+          {
+            "type": "fake_certification",
+            "bullet": "Added 15 unit tests and improved documentation, and earned the Google Professional Cloud Architect certification",
+            "verdict": "unsupported",
+            "evidence": "adds certification \"Google Professional Cloud Architect\" not listed in original CV"
+          },
+          {
+            "type": "control",
+            "bullet": "Mentored 3 junior developers through code reviews and pair programming sessions",
+            "verdict": "supported",
+            "evidence": "\"Mentored 3 junior developers through code reviews and pair programming sessions\""
+          },
+          {
+            "type": "control",
+            "bullet": "Relevant coursework: Data Structures, Algorithms, Machine Learning, Databases",
+            "verdict": "supported",
+            "evidence": "\"Relevant coursework: Data Structures, Algorithms, Machine Learning, Databases\""
+          },
+          {
+            "type": "control",
+            "bullet": "Contributed data validation module to an open-source data pipeline library",
+            "verdict": "supported",
+            "evidence": "\"Contributed data validation module to an open-source data pipeline library\""
+          }
+        ]
+      }
+    ]
+  }
+}

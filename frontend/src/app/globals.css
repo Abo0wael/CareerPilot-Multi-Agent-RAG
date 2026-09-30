@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+/* Dark mode follows a class on <html> (set before paint by ThemeScript). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Palette: aeronautical chart paper by day, cockpit at night.
+ * One accent ("beacon") marks the route, the active waypoint and primary actions.
+ * Status colours are semantic only: verified (supported) and removed (unsupported).
+ */
+:root {
+  --paper: #f5f3ee;
+  --surface: #ffffff;
+  --ink: #15181b;
+  --muted: #56606a;
+  --line: #d8d3c8;
+  --grid: rgba(21, 24, 27, 0.05);
+  --beacon: #c2410c;
+  --beacon-strong: #ea580c;
+  --beacon-soft: #fbe6da;
+  --verified: #0f766e;
+  --verified-soft: #dff1ee;
+  --removed: #b42318;
+  --removed-soft: #fbe4e1;
+}
+
+.dark {
+  --paper: #0d1012;
+  --surface: #151a1d;
+  --ink: #ebe8e2;
+  --muted: #9aa4ad;
+  --line: #2a3137;
+  --grid: rgba(235, 232, 226, 0.04);
+  --beacon: #fb8a4a;
+  --beacon-strong: #fb8a4a;
+  --beacon-soft: #3a2116;
+  --verified: #4fd1c0;
+  --verified-soft: #12302c;
+  --removed: #ff8a7a;
+  --removed-soft: #3a1714;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-beacon: var(--beacon);
+  --color-beacon-strong: var(--beacon-strong);
+  --color-beacon-soft: var(--beacon-soft);
+  --color-verified: var(--verified);
+  --color-verified-soft: var(--verified-soft);
+  --color-removed: var(--removed);
+  --color-removed-soft: var(--removed-soft);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --font-display: var(--font-archivo);
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+  /* Faint chart grid */
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--beacon-strong);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--beacon-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

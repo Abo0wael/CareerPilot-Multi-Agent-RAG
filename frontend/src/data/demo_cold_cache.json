@@ -1,0 +1,170 @@
+{
+  "cv": "sample_cv_backend_engineer.txt",
+  "preferences": "",
+  "pass_1_fill_cache": {
+    "wall_time_s": 23.74,
+    "groq_calls": 6,
+    "total_tokens": 11968,
+    "rate_limit_429s": 0,
+    "top_match": "Full Stack Engineer",
+    "claims": 10,
+    "unsupported_removed": 0,
+    "steps": {
+      "gap_analysis": {
+        "requests": 1,
+        "groq_calls": 1,
+        "cache_hits": 0,
+        "prompt_tokens": 1299,
+        "completion_tokens": 587,
+        "total_tokens": 1886,
+        "tokens_per_groq_call": 1886,
+        "avg_live_latency_s": 1.65,
+        "max_live_latency_s": 1.65,
+        "rate_limit_429s": 0
+      },
+      "profile_extraction": {
+        "requests": 1,
+        "groq_calls": 1,
+        "cache_hits": 0,
+        "prompt_tokens": 1010,
+        "completion_tokens": 585,
+        "total_tokens": 1595,
+        "tokens_per_groq_call": 1595,
+        "avg_live_latency_s": 1.26,
+        "max_live_latency_s": 1.26,
+        "rate_limit_429s": 0
+      },
+      "query_expansion": {
+        "requests": 1,
+        "groq_calls": 1,
+        "cache_hits": 0,
+        "prompt_tokens": 223,
+        "completion_tokens": 266,
+        "total_tokens": 489,
+        "tokens_per_groq_call": 489,
+        "avg_live_latency_s": 0.58,
+        "max_live_latency_s": 0.58,
+        "rate_limit_429s": 0
+      },
+      "rerank": {
+        "requests": 1,
+        "groq_calls": 1,
+        "cache_hits": 0,
+        "prompt_tokens": 3555,
+        "completion_tokens": 742,
+        "total_tokens": 4297,
+        "tokens_per_groq_call": 4297,
+        "avg_live_latency_s": 1.34,
+        "max_live_latency_s": 1.34,
+        "rate_limit_429s": 0
+      },
+      "tailoring": {
+        "requests": 1,
+        "groq_calls": 1,
+        "cache_hits": 0,
+        "prompt_tokens": 1164,
+        "completion_tokens": 722,
+        "total_tokens": 1886,
+        "tokens_per_groq_call": 1886,
+        "avg_live_latency_s": 5.95,
+        "max_live_latency_s": 5.95,
+        "rate_limit_429s": 0
+      },
+      "verification": {
+        "requests": 1,
+        "groq_calls": 1,
+        "cache_hits": 0,
+        "prompt_tokens": 1192,
+        "completion_tokens": 623,
+        "total_tokens": 1815,
+        "tokens_per_groq_call": 1815,
+        "avg_live_latency_s": 12.82,
+        "max_live_latency_s": 12.82,
+        "rate_limit_429s": 0
+      }
+    }
+  },
+  "pass_2_from_cache": {
+    "wall_time_s": 0.13,
+    "groq_calls": 0,
+    "total_tokens": 0,
+    "rate_limit_429s": 0,
+    "top_match": "Full Stack Engineer",
+    "claims": 10,
+    "unsupported_removed": 0,
+    "steps": {
+      "gap_analysis": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "profile_extraction": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "query_expansion": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "rerank": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "tailoring": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      },
+      "verification": {
+        "requests": 1,
+        "groq_calls": 0,
+        "cache_hits": 1,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "tokens_per_groq_call": 0,
+        "avg_live_latency_s": null,
+        "max_live_latency_s": null,
+        "rate_limit_429s": 0
+      }
+    }
+  }
+}

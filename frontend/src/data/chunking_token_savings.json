@@ -1,0 +1,165 @@
+{
+  "method": "exact character counts; tokens = chars / ratio calibrated from Groq usage.prompt_tokens",
+  "calibration_model": "openai/gpt-oss-20b",
+  "calibration_jobs": 8,
+  "per_message_overhead_tokens": 71,
+  "chars_per_token": {
+    "full": 5.66,
+    "sections": 5.54,
+    "deployed": 5.66,
+    "full_sectioned_jobs_only": 5.66,
+    "sections_sectioned_jobs_only": 5.54
+  },
+  "per_profile": [
+    {
+      "profile": "backend",
+      "jobs": 20,
+      "jobs_with_sections": 8,
+      "chars": {
+        "full": 47671,
+        "sections": 38454,
+        "deployed": 11885,
+        "full_sectioned_jobs_only": 26546,
+        "sections_sectioned_jobs_only": 17329
+      },
+      "est_tokens": {
+        "full": 8419,
+        "sections": 6946,
+        "deployed": 2099,
+        "full_sectioned_jobs_only": 4688,
+        "sections_sectioned_jobs_only": 3130
+      },
+      "saved_vs_full_pct": {
+        "sections": 17.5,
+        "deployed": 75.1
+      }
+    },
+    {
+      "profile": "data_analyst",
+      "jobs": 20,
+      "jobs_with_sections": 7,
+      "chars": {
+        "full": 64509,
+        "sections": 54314,
+        "deployed": 11783,
+        "full_sectioned_jobs_only": 34483,
+        "sections_sectioned_jobs_only": 24288
+      },
+      "est_tokens": {
+        "full": 11393,
+        "sections": 9811,
+        "deployed": 2081,
+        "full_sectioned_jobs_only": 6090,
+        "sections_sectioned_jobs_only": 4387
+      },
+      "saved_vs_full_pct": {
+        "sections": 13.9,
+        "deployed": 81.7
+      }
+    },
+    {
+      "profile": "data_scientist",
+      "jobs": 20,
+      "jobs_with_sections": 9,
+      "chars": {
+        "full": 57954,
+        "sections": 44862,
+        "deployed": 11381,
+        "full_sectioned_jobs_only": 41046,
+        "sections_sectioned_jobs_only": 27954
+      },
+      "est_tokens": {
+        "full": 10235,
+        "sections": 8103,
+        "deployed": 2010,
+        "full_sectioned_jobs_only": 7249,
+        "sections_sectioned_jobs_only": 5049
+      },
+      "saved_vs_full_pct": {
+        "sections": 20.8,
+        "deployed": 80.4
+      }
+    },
+    {
+      "profile": "devops",
+      "jobs": 20,
+      "jobs_with_sections": 10,
+      "chars": {
+        "full": 79728,
+        "sections": 65331,
+        "deployed": 12000,
+        "full_sectioned_jobs_only": 36215,
+        "sections_sectioned_jobs_only": 21818
+      },
+      "est_tokens": {
+        "full": 14081,
+        "sections": 11801,
+        "deployed": 2119,
+        "full_sectioned_jobs_only": 6396,
+        "sections_sectioned_jobs_only": 3941
+      },
+      "saved_vs_full_pct": {
+        "sections": 16.2,
+        "deployed": 85.0
+      }
+    },
+    {
+      "profile": "frontend",
+      "jobs": 20,
+      "jobs_with_sections": 11,
+      "chars": {
+        "full": 45003,
+        "sections": 33841,
+        "deployed": 11545,
+        "full_sectioned_jobs_only": 32000,
+        "sections_sectioned_jobs_only": 20838
+      },
+      "est_tokens": {
+        "full": 7948,
+        "sections": 6113,
+        "deployed": 2039,
+        "full_sectioned_jobs_only": 5652,
+        "sections_sectioned_jobs_only": 3764
+      },
+      "saved_vs_full_pct": {
+        "sections": 23.1,
+        "deployed": 74.3
+      }
+    },
+    {
+      "profile": "software_engineer",
+      "jobs": 20,
+      "jobs_with_sections": 10,
+      "chars": {
+        "full": 62049,
+        "sections": 52434,
+        "deployed": 12000,
+        "full_sectioned_jobs_only": 36721,
+        "sections_sectioned_jobs_only": 27106
+      },
+      "est_tokens": {
+        "full": 10958,
+        "sections": 9471,
+        "deployed": 2119,
+        "full_sectioned_jobs_only": 6485,
+        "sections_sectioned_jobs_only": 4896
+      },
+      "saved_vs_full_pct": {
+        "sections": 13.6,
+        "deployed": 80.7
+      }
+    }
+  ],
+  "average_job_text_tokens_per_rerank_call": {
+    "full": 10506,
+    "sections": 8708,
+    "deployed": 2078
+  },
+  "average_saved_vs_full_pct": {
+    "sections": 17.1,
+    "deployed": 80.2
+  },
+  "saved_on_postings_with_headers_pct": 31.2,
+  "share_of_candidates_with_headers": 0.458,
+  "note": "Job-text tokens only; the rerank prompt adds about 500 tokens of instructions and candidate profile."
+}
