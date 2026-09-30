@@ -2,7 +2,7 @@
 
 **A multi-agent RAG assistant for job seekers:** find jobs that actually fit, see what you are missing, and tailor your CV to a specific job without inventing anything.
 
-> **Author:** Ahmed (Computer Science)
+> **Author:** Ahmed (Computer Science) · Code walkthrough of `/pipeline` (Arabic): [`docs/walkthrough_ar.md`](docs/walkthrough_ar.md)
 
 ---
 
@@ -262,17 +262,43 @@ Controls judged supported: 24/24 (0 false alarms).
 
 ---
 
-## 8. Running it
+## 8. Running it (fresh clone)
+
+Windows paths shown; the commands are the same on macOS/Linux.
 
 ```bash
-conda activate careerpilot                  # Python 3.11
+# 1. Code and environment (Python 3.11)
+git clone <repo-url> careerpilot && cd careerpilot
+conda create -n careerpilot python=3.11 -y
+conda activate careerpilot
 pip install -r requirements.txt
-cp .env.example .env                        # set GROQ_API_KEY (and ADMIN_TOKEN to enable /ingest)
-python scripts/build_index.py               # zero LLM calls
-python -m pytest                            # 130 tests, never call Groq
-python scripts/warm_demo_cache.py           # before a demo
+
+# 2. Secrets: copy the template, then edit .env
+copy .env.example .env          # macOS/Linux: cp .env.example .env
+#    GROQ_API_KEY=gsk_...       (required, https://console.groq.com/keys)
+#    ADMIN_TOKEN=<long random>  (optional; enables POST /ingest)
+
+# 3. Data (Kaggle: arshkon/linkedin-job-postings, needs ~/.kaggle/kaggle.json)
+kaggle datasets download -d arshkon/linkedin-job-postings -p data --unzip
+#    expected: data/postings.csv, data/jobs/job_skills.csv, data/jobs/job_industries.csv,
+#              data/mappings/skills.csv, data/mappings/industries.csv
+
+# 4. Build the search index (zero LLM calls, about 1 minute, about 174 MB)
+python scripts/build_index.py
+
+# 5. Tests (130; never call Groq, and need neither .env nor the index)
+python -m pytest
+
+# 6. Before a demo: fill the LLM cache for the demo CV (then the demo makes 0 Groq calls)
+python scripts/warm_demo_cache.py
+
+# 7. Run the API: open http://127.0.0.1:8000/docs
 uvicorn src.api.main:app --host 127.0.0.1 --port 8000
 ```
+
+**Optional:**
+- `python scripts/evaluate.py` re-runs the full evaluation. It uses Groq, so expect several minutes because of rate-limit waits.
+- `python scripts/eda_chunking.py` re-runs the chunking EDA.
 
 | Method | Endpoint | Purpose | Errors |
 |---|---|---|---|
