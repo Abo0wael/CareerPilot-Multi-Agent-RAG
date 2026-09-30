@@ -2,6 +2,7 @@
 
 import { Loader2, Square } from "lucide-react";
 import { useEffect, useEffectEvent, useRef, type ReactNode } from "react";
+import { DEMOS, type DemoScenario } from "@/lib/demos";
 import { DEFAULT_PREFERENCES, useFlightPlan } from "@/lib/useFlightPlan";
 import { ErrorNotice } from "../ErrorNotice";
 import { Button, Waypoint } from "../ui";
@@ -11,7 +12,7 @@ import { MatchList } from "./MatchList";
 import { PreferencesForm } from "./PreferencesForm";
 import { ProfileSummary } from "./ProfileSummary";
 import { TailorView } from "./TailorView";
-import { DEMO_CV_PATH, UploadPanel } from "./UploadPanel";
+import { UploadPanel } from "./UploadPanel";
 
 function Step({ index, title, intro, children }: { index: number; title: string; intro?: string; children: ReactNode }) {
   return (
@@ -33,36 +34,45 @@ function Working({ children }: { children: ReactNode }) {
   );
 }
 
-export function FlightPlan({ autoDemo }: { autoDemo: boolean }) {
+export function FlightPlan({ autoDemo }: { autoDemo: DemoScenario["id"] | null }) {
   const flight = useFlightPlan();
   const { agents, profile, matches, selectedJobId, gap, tailored, error, busy } = flight;
   const selectedJob = matches?.find((m) => m.job_id === selectedJobId);
   const demoStarted = useRef(false);
+  const revealRemoved = useRef(false);
 
-  async function runDemo() {
+  async function runDemo(demo: DemoScenario) {
     let file: File;
     try {
-      const response = await fetch(DEMO_CV_PATH);
+      const response = await fetch(demo.cvPath);
       if (!response.ok) throw new Error(`Could not load the demo CV (${response.status}).`);
-      file = new File([await response.blob()], DEMO_CV_PATH.split("/").pop() ?? "demo.txt", { type: "text/plain" });
+      file = new File([await response.blob()], demo.cvPath.split("/").pop() ?? "demo.txt", { type: "text/plain" });
     } catch (err) {
-      flight.reportError(err, () => void runDemo());
+      flight.reportError(err, () => void runDemo(demo));
       return;
     }
-    // Same file and empty preferences as scripts/warm_demo_cache.py, so every step hits the cache.
-    await flight.start({ file }, DEFAULT_PREFERENCES);
+    revealRemoved.current = demo.jobId !== null;
+    // Same file, empty preferences and job as scripts/warm_demo_cache.py, so every step hits the cache.
+    await flight.start({ file }, DEFAULT_PREFERENCES, demo.jobId);
   }
 
-  const startDemoOnce = useEffectEvent(() => {
+  const startDemoOnce = useEffectEvent((id: DemoScenario["id"]) => {
     if (demoStarted.current) return;
     demoStarted.current = true;
-    void runDemo();
+    void runDemo(DEMOS[id]);
   });
 
-  // "Try the demo CV" on the landing page links here with ?demo=1.
+  // The landing page links here with ?demo=1 or ?demo=2.
   useEffect(() => {
-    if (autoDemo) startDemoOnce();
+    if (autoDemo) startDemoOnce(autoDemo);
   }, [autoDemo]);
+
+  // Demo 2 exists to show the Verifier at work: bring its result into view once it arrives.
+  useEffect(() => {
+    if (!tailored || !revealRemoved.current) return;
+    revealRemoved.current = false;
+    document.getElementById("verifier-removals")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [tailored]);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5 py-10">
@@ -88,7 +98,7 @@ export function FlightPlan({ autoDemo }: { autoDemo: boolean }) {
       </div>
 
       <Step index={1} title="Your CV" intro="PDF or plain text. The file is sent only to the CareerPilot API.">
-        <UploadPanel disabled={busy} onSubmit={(input) => void flight.start(input, null)} onDemo={() => void runDemo()} />
+        <UploadPanel disabled={busy} onSubmit={(input) => void flight.start(input, null)} onDemo={(id) => void runDemo(DEMOS[id])} />
       </Step>
 
       {(profile || agents.profile.status === "running") && (

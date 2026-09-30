@@ -101,7 +101,7 @@ export function useFlightPlan() {
     if (!signal.aborted) setTailored(cv);
   };
 
-  const matchWith = async (p: CandidateProfile, prefs: Preferences, signal: AbortSignal) => {
+  const matchWith = async (p: CandidateProfile, prefs: Preferences, signal: AbortSignal, preferredJobId: number | null = null) => {
       setMatches(null);
       setGap(null);
       setTailored(null);
@@ -110,11 +110,14 @@ export function useFlightPlan() {
       const response = await step(["matcher"], () => api.match(p, preferencesText(prefs), prefs.topK, signal));
       if (signal.aborted) return;
       setMatches(response.matches);
-      if (response.matches.length > 0) await analyzeWith(p, response.matches[0].job_id, signal);
+      if (response.matches.length === 0) return;
+      // A demo may ask for a specific job; if the ranking differs and it is not in the list, use the top match.
+      const target = response.matches.find((m) => m.job_id === preferredJobId) ?? response.matches[0];
+      await analyzeWith(p, target.job_id, signal);
   };
 
-  /** Profile, then (if `thenMatch`) matches and analysis of the top job. */
-  const start = async (input: CvInput, thenMatch: Preferences | null) => {
+  /** Profile, then (if `thenMatch`) matches and analysis of `preferredJobId` (or the top job). */
+  const start = async (input: CvInput, thenMatch: Preferences | null, preferredJobId: number | null = null) => {
       const signal = begin();
       setAgents(IDLE);
       setProfile(null);
@@ -127,11 +130,11 @@ export function useFlightPlan() {
         const p = await step(["profile"], () => api.buildProfile(input, signal));
         if (signal.aborted) return;
         setProfile(p);
-        if (thenMatch) await matchWith(p, thenMatch, signal);
+        if (thenMatch) await matchWith(p, thenMatch, signal, preferredJobId);
       } catch (err) {
         failure = err;
       } finally {
-        finish(signal, failure, () => void start(input, thenMatch));
+        finish(signal, failure, () => void start(input, thenMatch, preferredJobId));
       }
   };
 

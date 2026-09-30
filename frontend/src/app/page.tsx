@@ -35,6 +35,9 @@ export default function Home() {
               <Plane size={16} aria-hidden /> Try the demo CV
             </ButtonLink>
           </div>
+          <ButtonLink href="/flight?demo=2" variant="ghost" className="self-start px-0">
+            <ShieldCheck size={16} aria-hidden /> Demo 2: watch the Verifier catch a claim
+          </ButtonLink>
         </div>
         <div className="rounded-lg border border-line bg-surface p-4 sm:p-6">
           <RouteIllustration />

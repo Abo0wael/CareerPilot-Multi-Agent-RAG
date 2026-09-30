@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FlightPlan } from "@/components/flight/FlightPlan";
+import { isDemoId } from "@/lib/demos";
 
 export const metadata: Metadata = {
   title: "Flight plan",
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 
 export default async function FlightPage({ searchParams }: PageProps<"/flight">) {
   const { demo } = await searchParams;
-  return <FlightPlan autoDemo={demo === "1"} />;
+  return <FlightPlan autoDemo={isDemoId(demo) ? demo : null} />;
 }

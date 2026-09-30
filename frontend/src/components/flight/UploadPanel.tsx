@@ -1,14 +1,14 @@
 "use client";
 
-import { FileText, Plane, Upload } from "lucide-react";
+import { FileText, Plane, ShieldAlert, Upload } from "lucide-react";
 import { useState, type DragEvent } from "react";
+import { DEMOS, type DemoScenario } from "@/lib/demos";
 import type { CvInput } from "@/lib/useFlightPlan";
 import { Button, Card } from "../ui";
 
-export const DEMO_CV_PATH = "/demo/sample_cv_backend_engineer.txt";
 const ACCEPTED = [".pdf", ".txt"];
 
-/** Drag-and-drop or pick a CV, paste text, or load the synthetic demo CV. */
+/** Drag-and-drop or pick a CV, paste text, or load one of the synthetic demo CVs. */
 export function UploadPanel({
   disabled,
   onSubmit,
@@ -16,7 +16,7 @@ export function UploadPanel({
 }: {
   disabled: boolean;
   onSubmit: (input: CvInput) => void;
-  onDemo: () => void;
+  onDemo: (id: DemoScenario["id"]) => void;
 }) {
   const [dragging, setDragging] = useState(false);
   const [text, setText] = useState("");
@@ -87,12 +87,16 @@ export function UploadPanel({
           <Button disabled={disabled || text.trim().length < 10} onClick={() => onSubmit({ text: text.trim() })}>
             Read this CV
           </Button>
-          <Button variant="secondary" disabled={disabled} onClick={onDemo}>
-            <Plane size={14} aria-hidden /> Try the demo CV
+          <Button variant="secondary" disabled={disabled} onClick={() => onDemo("1")}>
+            <Plane size={14} aria-hidden /> {DEMOS["1"].label}
           </Button>
         </div>
+        <Button variant="secondary" disabled={disabled} onClick={() => onDemo("2")} className="self-start">
+          <ShieldAlert size={14} aria-hidden /> {DEMOS["2"].label}
+        </Button>
         <p className="text-xs text-muted">
-          The demo CV is synthetic (a backend engineer) and its answers are pre-cached, so it runs without Groq calls.
+          Both demo CVs are synthetic and their answers are pre-cached, so they run without Groq calls. Demo 2:{" "}
+          {DEMOS["2"].description}
         </p>
       </Card>
     </div>

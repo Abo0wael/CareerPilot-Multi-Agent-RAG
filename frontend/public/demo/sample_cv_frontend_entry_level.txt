@@ -1,0 +1,57 @@
+[SYNTHETIC - FOR TESTING/EVALUATION ONLY - NOT A REAL CV]
+
+Emma Wilson
+Email: emma.w@example.com | Phone: (555) 111-2222
+
+SUMMARY
+Recent computer science graduate seeking entry-level frontend developer position.
+Eager to apply academic knowledge of web technologies and UI/UX design in a
+professional setting. Quick learner with strong foundation in modern JavaScript frameworks.
+
+SKILLS
+HTML, CSS, JavaScript, TypeScript, React, Next.js, Vue.js, Tailwind CSS,
+Bootstrap, Figma, Git, GitHub, REST APIs, Responsive Design, Accessibility (WCAG),
+Node.js (basic), MongoDB (basic)
+
+EXPERIENCE
+
+Frontend Development Intern | DesignFirst Agency | Jun 2024 - Aug 2024
+- Built responsive landing pages for 3 client projects using React and Tailwind CSS
+- Implemented pixel-perfect designs from Figma mockups with cross-browser compatibility
+- Fixed 15+ accessibility issues to achieve WCAG 2.1 AA compliance
+- Participated in code reviews and daily standups in an Agile team
+
+Freelance Web Developer | Self-employed | Jan 2024 - May 2024
+- Developed portfolio websites for 5 local businesses using HTML, CSS, and JavaScript
+- Built a restaurant booking system with React frontend and Firebase backend
+- Achieved 95+ Lighthouse performance scores on all projects
+
+PROJECTS
+
+E-Commerce Store (Capstone Project)
+- Built full-stack e-commerce application with React, Node.js, and MongoDB
+- Implemented shopping cart, user authentication, and Stripe payment integration
+- Deployed on Vercel with CI/CD pipeline via GitHub Actions
+- Technologies: React, TypeScript, Node.js, MongoDB, Stripe API
+
+Weather Dashboard
+- Created real-time weather dashboard consuming OpenWeatherMap API
+- Features: location search, 5-day forecast, responsive charts
+- Technologies: Vue.js, Chart.js, CSS Grid
+
+Accessibility Audit Tool
+- Developed browser extension that highlights accessibility issues on web pages
+- Checks color contrast, alt text, heading hierarchy, and ARIA labels
+- Technologies: JavaScript, Chrome Extension API, HTML/CSS
+
+EDUCATION
+
+B.Sc. Computer Science | Community College of Technology | 2024
+- GPA: 3.3/4.0
+- Dean's List: Fall 2023, Spring 2024
+- Relevant coursework: Web Development, UI/UX Design, Data Structures,
+  Software Engineering, Database Systems
+
+CERTIFICATIONS
+- Meta Frontend Developer Professional Certificate (2024)
+- freeCodeCamp Responsive Web Design (2023)

@@ -17,8 +17,9 @@ const copies = [
   [join(evaluation, "runs", "run1_tailor20b_original_prompt.json"), join(dataDir, "runs", "run1.json")],
   [join(evaluation, "runs", "run2_tailor20b_strict_prompt.json"), join(dataDir, "runs", "run2.json")],
   [join(evaluation, "runs", "run3_tailor120b_strict_prompt.json"), join(dataDir, "runs", "run3.json")],
-  // Same bytes as the file scripts/warm_demo_cache.py uploads, so the demo hits the LLM cache.
+  // Same bytes as the files scripts/warm_demo_cache.py uploads, so the demos hit the LLM cache.
   [join(root, "tests", "fixtures", "sample_cv_backend_engineer.txt"), join(frontend, "public", "demo", "sample_cv_backend_engineer.txt")],
+  [join(root, "tests", "fixtures", "sample_cv_frontend_entry_level.txt"), join(frontend, "public", "demo", "sample_cv_frontend_entry_level.txt")],
 ];
 
 let copied = 0;

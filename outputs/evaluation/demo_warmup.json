@@ -1,169 +1,363 @@
 {
-  "cv": "sample_cv_backend_engineer.txt",
-  "preferences": "",
-  "pass_1_fill_cache": {
-    "wall_time_s": 0.07,
-    "groq_calls": 0,
-    "total_tokens": 0,
-    "rate_limit_429s": 0,
-    "top_match": "Senior Java Engineer (API/AWS)",
-    "claims": 10,
-    "unsupported_removed": 0,
-    "steps": {
-      "gap_analysis": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
-      },
-      "profile_extraction": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
-      },
-      "query_expansion": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
-      },
-      "rerank": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
-      },
-      "tailoring": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
-      },
-      "verification": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
+  "demo1": {
+    "cv": "sample_cv_backend_engineer.txt",
+    "job_id": null,
+    "pass_1_fill_cache": {
+      "wall_time_s": 0.07,
+      "groq_calls": 0,
+      "total_tokens": 0,
+      "rate_limit_429s": 0,
+      "analysed_job_id": 3901979256,
+      "analysed_job_title": "Senior Java Engineer (API/AWS)",
+      "analysed_job_rank_in_matches": 1,
+      "claims": 10,
+      "supported": 10,
+      "removed": [],
+      "steps": {
+        "gap_analysis": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "profile_extraction": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "query_expansion": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "rerank": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "tailoring": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "verification": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        }
+      }
+    },
+    "pass_2_from_cache": {
+      "wall_time_s": 0.07,
+      "groq_calls": 0,
+      "total_tokens": 0,
+      "rate_limit_429s": 0,
+      "analysed_job_id": 3901979256,
+      "analysed_job_title": "Senior Java Engineer (API/AWS)",
+      "analysed_job_rank_in_matches": 1,
+      "claims": 10,
+      "supported": 10,
+      "removed": [],
+      "steps": {
+        "gap_analysis": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "profile_extraction": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "query_expansion": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "rerank": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "tailoring": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "verification": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        }
       }
     }
   },
-  "pass_2_from_cache": {
-    "wall_time_s": 0.07,
-    "groq_calls": 0,
-    "total_tokens": 0,
-    "rate_limit_429s": 0,
-    "top_match": "Senior Java Engineer (API/AWS)",
-    "claims": 10,
-    "unsupported_removed": 0,
-    "steps": {
-      "gap_analysis": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
-      },
-      "profile_extraction": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
-      },
-      "query_expansion": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
-      },
-      "rerank": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
-      },
-      "tailoring": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
-      },
-      "verification": {
-        "requests": 1,
-        "groq_calls": 0,
-        "cache_hits": 1,
-        "prompt_tokens": 0,
-        "completion_tokens": 0,
-        "total_tokens": 0,
-        "tokens_per_groq_call": 0,
-        "avg_live_latency_s": null,
-        "max_live_latency_s": null,
-        "rate_limit_429s": 0
+  "demo2": {
+    "cv": "sample_cv_frontend_entry_level.txt",
+    "job_id": 3900943289,
+    "pass_1_fill_cache": {
+      "wall_time_s": 0.03,
+      "groq_calls": 0,
+      "total_tokens": 0,
+      "rate_limit_429s": 0,
+      "analysed_job_id": 3900943289,
+      "analysed_job_title": "React Front End Developer - Remote",
+      "analysed_job_rank_in_matches": 1,
+      "claims": 10,
+      "supported": 9,
+      "removed": [
+        {
+          "bullet": "Developed a real‑time weather dashboard UI in React that consumes the OpenWeatherMap API and updates dynamically",
+          "reason": "Original CV states the Weather Dashboard was built with Vue.js, not React"
+        }
+      ],
+      "steps": {
+        "gap_analysis": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "profile_extraction": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "query_expansion": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "rerank": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "tailoring": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "verification": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        }
+      }
+    },
+    "pass_2_from_cache": {
+      "wall_time_s": 0.03,
+      "groq_calls": 0,
+      "total_tokens": 0,
+      "rate_limit_429s": 0,
+      "analysed_job_id": 3900943289,
+      "analysed_job_title": "React Front End Developer - Remote",
+      "analysed_job_rank_in_matches": 1,
+      "claims": 10,
+      "supported": 9,
+      "removed": [
+        {
+          "bullet": "Developed a real‑time weather dashboard UI in React that consumes the OpenWeatherMap API and updates dynamically",
+          "reason": "Original CV states the Weather Dashboard was built with Vue.js, not React"
+        }
+      ],
+      "steps": {
+        "gap_analysis": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "profile_extraction": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "query_expansion": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "rerank": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "tailoring": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        },
+        "verification": {
+          "requests": 1,
+          "groq_calls": 0,
+          "cache_hits": 1,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0,
+          "tokens_per_groq_call": 0,
+          "avg_live_latency_s": null,
+          "max_live_latency_s": null,
+          "rate_limit_429s": 0
+        }
       }
     }
   }

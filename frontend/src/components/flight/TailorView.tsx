@@ -61,8 +61,9 @@ export function TailorView({ cv }: { cv: TailoredCV }) {
       )}
 
       <section
+        id="verifier-removals"
         aria-labelledby="removed-title"
-        className={`rounded-lg border-2 p-5 ${
+        className={`scroll-mt-80 rounded-lg border-2 p-5 ${
           cv.removed_bullets.length > 0 ? "border-removed bg-removed-soft" : "border-verified/50 bg-verified-soft"
         }`}
       >

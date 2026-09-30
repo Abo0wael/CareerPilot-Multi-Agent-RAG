@@ -11,9 +11,9 @@
 
 ![CareerPilot landing page](docs/screenshots/landing-light.png)
 
-| Matches with grounded reasons | Tailored CV with per-claim verification | How it works (measured results) |
+| Matches with grounded reasons | The Verifier removing a fabricated claim (Demo 2) | How it works (measured results) |
 |---|---|---|
-| ![Matches](docs/screenshots/flight-matches-light.png) | ![Tailored CV](docs/screenshots/flight-tailor-dark.png) | ![How it works](docs/screenshots/how-it-works-light.png) |
+| ![Matches](docs/screenshots/flight-matches-light.png) | ![Removed by Verifier](docs/screenshots/verifier-removal-light.png) | ![How it works](docs/screenshots/how-it-works-light.png) |
 
 ---
 
@@ -42,7 +42,10 @@ Recruiters have AI tools that screen thousands of CVs in seconds. Candidates hav
 - **Verified tailoring:** each bullet is marked `supported` or `unverified`; unsupported claims are removed and listed with the reason.
 - **A real multi-agent graph:** every reasoning endpoint runs a LangGraph workflow routed by request type.
 - **Web UI (Next.js):** drag-and-drop CV, match cards, side-by-side gap and tailoring views, a live agent timeline driven by real request completions, light/dark mode, keyboard and screen-reader support.
-- **Rate-limit aware:** Groq's `retry-after` is honoured; a 503 in the UI shows a countdown; a demo CV is pre-cached so a demo makes no LLM calls.
+- **Rate-limit aware:** Groq's `retry-after` is honoured; a 503 in the UI shows a countdown.
+- **Two pre-cached demos:**
+  - Demo 1: a backend CV and its top match.
+  - Demo 2: an entry-level frontend CV and a React job. In the recorded evaluation run, the tailor rewrote a Vue.js project as React and the Verifier removed it; the UI replays that cached result, and nothing is scripted.
 - **Honest evaluation:** retrieval ablation, faithfulness, an adversarial Verifier test and token costs, all reproducible from scripts. Negative results are included.
 
 ## Architecture
@@ -218,7 +221,7 @@ kaggle datasets download -d arshkon/linkedin-job-postings -p data --unzip
 
 python scripts/build_index.py        # about 1 minute, zero LLM calls
 python -m pytest                     # 135 tests, never call Groq
-python scripts/warm_demo_cache.py    # pre-cache the demo CV
+python scripts/warm_demo_cache.py    # pre-cache both demo scenarios (0 Groq calls if already cached)
 uvicorn src.api.main:app --host 127.0.0.1 --port 8000   # docs at /docs
 ```
 
@@ -267,6 +270,10 @@ cd frontend && npm run lint && npm run build
 - **Query building:** it uses only the first five extracted skills; building it from the target role and all skills should help profiles like the data scientist.
 - **Evaluation:** 6 synthetic CVs and a weak title-based label are not enough for significance. More profiles and human relevance judgments are needed.
 - **Verifier:** it checks bullets but not the one-line tailoring summary; its false-alarm rate on real tailoring is unmeasured.
+- **Non-determinism:** LLM output varies between runs, even at temperature 0.
+  - Demo 2 is cached.
+  - 3 cold reruns of that scenario all removed the Vue.js → React claim, but removed 1, 3 and 1 bullets respectively, with different wording.
+  - A fourth cold run failed with an error that was not captured and did not reproduce.
 - **Deployment:** the UI is Vercel-ready; the API needs a host with persistent disk (index + LLM cache). Not deployed yet.
 
 ## Author

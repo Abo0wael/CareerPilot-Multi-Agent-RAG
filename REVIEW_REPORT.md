@@ -139,7 +139,25 @@ Details and interpretation are in the README (section 6). Generated tables are i
 - **One cold `/pipeline`:** 6 calls, 11,968 tokens (20b: 6,381, 120b: 5,587), 23.7 s, 0 × 429.
 - **Demo:** `scripts/warm_demo_cache.py` pre-runs the demo CV through the API wiring. Afterwards all five reasoning endpoints for that CV made 0 Groq calls (12 cache hits).
 
-## 9. Tests (130)
+## 8.1 Demo scenarios
+
+`scripts/warm_demo_cache.py` warms two scenarios through the API wiring, step by step as the UI calls them.
+
+| Demo | CV | Job | Cached result |
+|---|---|---|---|
+| 1 | `sample_cv_backend_engineer.txt` | top match: 3901979256, Senior Java Engineer (API/AWS) | 10/10 supported, 0 removed |
+| 2 | `sample_cv_frontend_entry_level.txt` | 3900943289, React Front End Developer - Remote | 9/10 supported, **1 removed** |
+
+- **What Demo 2 removed:** "Developed a real-time weather dashboard UI in React…". Reason given: the original CV states the Weather Dashboard was built with Vue.js.
+- **Where it comes from:** this is the evaluation's run-3 output, served from the LLM cache. Nothing is injected.
+- **Through the UI (Playwright):** both demos made 0 Groq calls after warming.
+- **Reproducibility (cold reruns with an empty cache):**
+  - 3 of 4 cold runs completed; all 3 removed the Vue.js → React claim (1, 3 and 1 bullets removed).
+  - One of them also removed "fast load times", which the cached run verified.
+  - One run failed with an error that was not captured and did not reproduce.
+  - The demo relies on the cache for a stable presentation.
+
+## 9. Tests (135)
 
 | File | Tests | Covers |
 |---|---|---|
@@ -153,6 +171,7 @@ Details and interpretation are in the README (section 6). Generated tables are i
 | test_chunkers.py | 18 | section/paragraph/hierarchical chunking, caps and merges |
 | test_entities.py | 16 | entity invariants, model aliases |
 | test_fts5.py | 1 | FTS5 available |
+| test_cors.py | 5 | allowed origins from ALLOWED_ORIGINS, unknown origin rejected, Retry-After exposed |
 
 ## 10. Deviations from the specification
 
