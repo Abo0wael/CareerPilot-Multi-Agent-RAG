@@ -1,7 +1,27 @@
 // Typed client for the CareerPilot FastAPI backend. This is the only module that talks to the API.
 // Types mirror src/api/schemas.py.
 
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
+export function getApiUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl && envUrl.trim()) {
+    const cleanEnv = envUrl.replace(/\/$/, "");
+    if (typeof window !== "undefined" && window.location.hostname) {
+      const host = window.location.hostname;
+      if (host !== "localhost" && host !== "127.0.0.1" && (cleanEnv.includes("localhost") || cleanEnv.includes("127.0.0.1"))) {
+        const port = cleanEnv.match(/:(\d+)$/)?.[1] ?? "8000";
+        return `http://${host}:${port}`;
+      }
+    }
+    return cleanEnv;
+  }
+
+  if (typeof window !== "undefined" && window.location.hostname) {
+    return `http://${window.location.hostname}:8000`;
+  }
+  return "http://127.0.0.1:8000";
+}
+
+export const API_URL = getApiUrl();
 
 export interface Experience {
   role: string;
@@ -111,15 +131,35 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init: RequestInit): Promise<T> {
   let response: Response;
+  const baseUrl = getApiUrl();
   try {
-    response = await fetch(`${API_URL}${path}`, init);
+    response = await fetch(`${baseUrl}${path}`, init);
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
-    throw new ApiError(0, `Cannot reach the CareerPilot API at ${API_URL}. Is the backend running?`, null);
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const isCrossHost = origin && !baseUrl.startsWith(origin);
+    const corsHint = isCrossHost
+      ? ` If you are testing across LAN, verify the backend is listening on 0.0.0.0 and ALLOWED_ORIGINS in .env includes "${origin}".`
+      : "";
+    throw new ApiError(
+      0,
+      `Cannot reach the CareerPilot API at ${baseUrl}. Is the backend running?${corsHint}`,
+      null,
+    );
   }
   if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as { detail?: unknown } | null;
-    const detail = typeof body?.detail === "string" ? body.detail : response.statusText;
+    let detail = "";
+    try {
+      const text = await response.text();
+      try {
+        const body = JSON.parse(text) as { detail?: unknown };
+        detail = typeof body?.detail === "string" ? body.detail : text;
+      } catch {
+        detail = text || response.statusText;
+      }
+    } catch {
+      detail = response.statusText;
+    }
     const retryAfter = Number(response.headers.get("Retry-After"));
     throw new ApiError(response.status, detail, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : null);
   }
@@ -160,7 +200,8 @@ export const api = {
 /** A short, user-facing explanation for an API error. */
 export function describeError(error: unknown): { title: string; message: string; retryAfterSeconds: number | null } {
   if (!(error instanceof ApiError)) {
-    return { title: "Something went wrong", message: String(error), retryAfterSeconds: null };
+    const rawMsg = error instanceof Error ? error.message : String(error);
+    return { title: "Upload failed", message: rawMsg, retryAfterSeconds: null };
   }
   switch (error.status) {
     case 503:
@@ -174,10 +215,19 @@ export function describeError(error: unknown): { title: string; message: string;
     case 404:
       return { title: "Job not found", message: error.detail, retryAfterSeconds: null };
     case 400:
+      if (error.detail.toLowerCase().includes("cors")) {
+        const origin = typeof window !== "undefined" ? window.location.origin : "this origin";
+        return {
+          title: "CORS error: origin disallowed",
+          message: `${error.detail}. Add ${origin} to ALLOWED_ORIGINS in the backend .env file.`,
+          retryAfterSeconds: null,
+        };
+      }
       return { title: "The CV could not be read", message: error.detail, retryAfterSeconds: null };
     case 0:
-      return { title: "API unreachable", message: error.detail, retryAfterSeconds: null };
+      return { title: "API unreachable / Network or CORS failure", message: error.detail, retryAfterSeconds: null };
     default:
       return { title: `Request failed (${error.status})`, message: error.detail, retryAfterSeconds: null };
   }
 }
+

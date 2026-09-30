@@ -98,7 +98,14 @@ export function FlightPlan({ autoDemo }: { autoDemo: DemoScenario["id"] | null }
       </div>
 
       <Step index={1} title="Your CV" intro="PDF or plain text. The file is sent only to the CareerPilot API.">
-        <UploadPanel disabled={busy} onSubmit={(input) => void flight.start(input, null)} onDemo={(id) => void runDemo(DEMOS[id])} />
+        <UploadPanel
+          disabled={busy}
+          uploading={busy && agents.profile.status === "running"}
+          error={!profile ? error : null}
+          onSubmit={(input) => void flight.start(input, null)}
+          onDemo={(id) => void runDemo(DEMOS[id])}
+          onRetry={error ? error.retry : undefined}
+        />
       </Step>
 
       {(profile || agents.profile.status === "running") && (
