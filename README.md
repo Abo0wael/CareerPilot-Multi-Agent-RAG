@@ -1,338 +1,274 @@
 # CareerPilot
 
-**A multi-agent RAG assistant for job seekers:** find jobs that actually fit, see what you are missing, and tailor your CV to a specific job without inventing anything.
+**A multi-agent assistant for job seekers: find jobs that fit, see what you are missing, and tailor your CV without inventing anything.**
 
-> **Author:** Ahmed (Computer Science) · Code walkthrough of `/pipeline` (Arabic): [`docs/walkthrough_ar.md`](docs/walkthrough_ar.md)
+![Python 3.11](https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![LangGraph](https://img.shields.io/badge/LangGraph-agents-1C3C3C)
+![Groq](https://img.shields.io/badge/LLM-Groq-F55036)
+![Tests](https://img.shields.io/badge/tests-135%20passing-2EA44F)
+
+![CareerPilot landing page](docs/screenshots/landing-light.png)
+
+| Matches with grounded reasons | Tailored CV with per-claim verification | How it works (measured results) |
+|---|---|---|
+| ![Matches](docs/screenshots/flight-matches-light.png) | ![Tailored CV](docs/screenshots/flight-tailor-dark.png) | ![How it works](docs/screenshots/how-it-works-light.png) |
 
 ---
 
-## 1. The story
+## The problem
 
 A fresh graduate applies to dozens of jobs and hears nothing back, without knowing why. Three questions go unanswered:
 
-1. *Which jobs actually fit me?*
-2. *What am I missing for this job?*
-3. *How do I present myself for this specific job?*
+1. **Which jobs actually fit me?**
+2. **What am I missing?**
+3. **How do I present myself for this specific job?**
 
-Recruiters have AI tools that screen thousands of CVs in seconds. Candidates have nothing comparable. CareerPilot gives the candidate that power.
+Recruiters have AI tools that screen thousands of CVs in seconds. Candidates have nothing comparable.
 
-**Flow:** upload CV → structured profile → top-10 real matching jobs with reasons → gap report (requirements you meet, with evidence quoted from your CV, and the ones you are missing) → tailored CV bullets that only use facts from your original CV → claim-by-claim verification. Unsupported claims are removed.
+**CareerPilot takes your CV through five agents:**
 
-**Data:** 13,975 tech job postings from Kaggle (`arshkon/linkedin-job-postings`), filtered from the full LinkedIn dataset by title/skill rules. An audited random sample is 82% truly tech (section 10).
+1. It reads the CV into a structured profile.
+2. It finds the ten best real postings among 13,975 tech jobs, each with a reason.
+3. It shows the requirements you meet (quoting your CV as evidence) and the ones you are missing.
+4. It rewrites your bullets for the chosen job.
+5. A **Verifier** checks every rewritten claim against your original CV and removes anything it cannot find there.
 
----
+## Features
 
-## 2. Architecture
+- **Job matching without embeddings:** SQLite FTS5 BM25 over job-posting sections, LLM query expansion, and LLM reranking with a grounded reason per job.
+- **Gap analysis:** matched requirements with a CV evidence quote, next to the missing ones.
+- **Verified tailoring:** each bullet is marked `supported` or `unverified`; unsupported claims are removed and listed with the reason.
+- **A real multi-agent graph:** every reasoning endpoint runs a LangGraph workflow routed by request type.
+- **Web UI (Next.js):** drag-and-drop CV, match cards, side-by-side gap and tailoring views, a live agent timeline driven by real request completions, light/dark mode, keyboard and screen-reader support.
+- **Rate-limit aware:** Groq's `retry-after` is honoured; a 503 in the UI shows a countdown; a demo CV is pre-cached so a demo makes no LLM calls.
+- **Honest evaluation:** retrieval ablation, faithfulness, an adversarial Verifier test and token costs, all reproducible from scripts. Negative results are included.
 
-### 2.1 Layers and the dependency rule
+## Architecture
 
-```
-api  ->  agents  ->  application  ->  domain  <-  infrastructure
-```
-
-| Layer | Contents | May import |
-|---|---|---|
-| `src/domain` | Entities, exceptions, ports (ABCs), pure scoring (`scoring.py`) | standard library only |
-| `src/application` | Use cases (`BuildProfile`, `MatchJobs`, `AnalyzeGap`, `TailorCV`, `VerifyTailoredCV`, `IngestJobs`) | `domain` only |
-| `src/agents` | LangGraph nodes (one per step), `graph.py` (routing), `workflow.py` (typed facade) | `application`, `domain` |
-| `src/infrastructure` | SQLite FTS5 index, Groq client, Groq implementations of the ports, prompts, chunkers, CV parser, Kaggle loader | `domain` |
-| `src/api` | FastAPI endpoints, schemas, error handlers, `dependencies.py` (composition root) | everything (it wires the app) |
-
-`tests/test_architecture.py` parses every import in `src/` and **fails the build** if `domain` imports another layer or a framework, if `application` imports `agents`/`infrastructure`/`api`, or if `agents` or `infrastructure` import an outer layer.
+The backend follows Clean Architecture. Dependencies point inward; infrastructure implements the domain ports.
 
 ```mermaid
 flowchart LR
-    subgraph API["api (FastAPI)"]
-        EP["main.py endpoints"]
-        DEP["dependencies.py<br/>(composition root)"]
+    UI["Next.js web UI"] -->|HTTP| EP
+    subgraph API["api"]
+        EP["endpoints · schemas · error handlers"]
+        DEP["dependencies.py (composition root)"]
     end
-    subgraph AG["agents (LangGraph)"]
-        WF["CareerPilotWorkflow"] --> G["StateGraph<br/>route by request_type"]
-        G --> PA["ProfileAgent"] & MA["MatcherAgent"] & GA["GapAnalyzerAgent"] & TA["TailorAgent"] & VA["VerifierAgent"]
+    subgraph AG["agents"]
+        WF["CareerPilotWorkflow"] --> G["LangGraph StateGraph"]
     end
-    subgraph APP["application (use cases)"]
-        UP["BuildProfile"] & UM["MatchJobs"] & UG["AnalyzeGap"] & UT["TailorCV"] & UV["VerifyTailoredCV"] & UI["IngestJobs"]
+    subgraph APP["application"]
+        UC["use cases: BuildProfile · MatchJobs · AnalyzeGap · TailorCV · VerifyTailoredCV · IngestJobs"]
     end
     subgraph DOM["domain"]
-        PORTS["Ports: Retriever, JobRepository, QueryExpander, Reranker,<br/>ProfileExtractor, GapAnalyzer, CVTailor, ClaimVerifier,<br/>CVParser, Chunker, SearchIndexWriter, JobSource, IndexStatsReader"]
-        ENT["Entities + scoring"]
+        P["ports · entities · scoring"]
     end
     subgraph INF["infrastructure"]
-        IMPL["SQLiteFTSIndex, SQLiteJobRepository, GroqClient,<br/>GroqQueryExpander, GroqReranker, GroqProfileExtractor,<br/>GroqGapAnalyzer, GroqCVTailor, GroqClaimVerifier,<br/>UniversalCVParser, CompositeChunker, KaggleDataLoader"]
+        I["SQLite FTS5 · Groq client + Groq port implementations · chunkers · CV parser · Kaggle loader"]
     end
     EP --> WF
-    EP --> UI
-    PA --> UP
-    MA --> UM
-    GA --> UG
-    TA --> UT
-    VA --> UV
-    APP --> PORTS
-    APP --> ENT
-    IMPL -. implements .-> PORTS
-    DEP -. creates and injects .-> IMPL
-    DEP -. creates .-> WF
+    G --> UC
+    UC --> P
+    I -. implements .-> P
+    DEP -. wires .-> I
+    DEP -. wires .-> WF
 ```
 
-### 2.2 The multi-agent graph (used by every reasoning endpoint)
+**Dependency rule:** `api → agents → application → domain ← infrastructure`, enforced by [`tests/test_architecture.py`](tests/test_architecture.py).
 
-| Endpoint | `request_type` | Agents run |
+**The LangGraph flow.** Routers are pure functions of the state; tailoring is always followed by verification.
+
+```mermaid
+flowchart LR
+    S((start)) -->|profile / pipeline| PA[Profile]
+    S -->|match| MA[Matcher]
+    S -->|gap| GA[Gap]
+    S -->|tailor| TA[Tailor]
+    PA -->|pipeline| MA
+    MA -->|pipeline and matches found| GA
+    GA -->|pipeline| TA
+    TA --> VA[Verifier]
+    PA -.->|otherwise| E((end))
+    MA -.->|otherwise| E
+    GA -.->|otherwise| E
+    VA --> E
+```
+
+| Endpoint | Agents run |
+|---|---|
+| `POST /profile` | Profile |
+| `POST /match` | Matcher |
+| `POST /gap` | Gap |
+| `POST /tailor` | Tailor → Verifier |
+| `POST /pipeline` | Profile → Matcher → Gap → Tailor → Verifier (for the top match) |
+
+A step-by-step code walkthrough of `/pipeline` (in Egyptian Arabic) is in [`docs/walkthrough_ar.md`](docs/walkthrough_ar.md).
+
+## Retrieval without embeddings
+
+- **The constraint:** every model call goes to the Groq API, and Groq offers no embedding models. That rules out a vector database.
+- **The pipeline:**
+  1. **Query:** user preferences plus the first five profile skills.
+  2. **LLM expansion** (Groq `gpt-oss-20b`): 3–6 related terms.
+  3. **BM25** over 91,190 section chunks (SQLite FTS5, Porter stemming); `benefits` and `about` are excluded.
+  4. **Job score = MAX over its chunks:** SUM would reward long postings; AVG would dilute the best match.
+  5. **LLM rerank** of the top 20 (0–100 plus a reason); jobs are ordered by the LLM score, and BM25 only breaks ties.
+- **The trade-off, stated honestly:** BM25 needs word overlap, while dense retrieval matches meaning. Expansion and reranking compensate for part of that, not all of it. Without the Groq-only constraint, a hybrid BM25 + embeddings retriever would be the next step.
+
+## Data and chunking
+
+- **Dataset:** [Kaggle `arshkon/linkedin-job-postings`](https://www.kaggle.com/datasets/arshkon/linkedin-job-postings), filtered by title/skill rules to **13,975 tech postings**.
+- **Tech subset precision:** an audit of 50 random postings found **82%** truly tech (88% counting industrial PLC-controls jobs); the misses are other engineering disciplines. See [`tech_subset_audit.md`](outputs/evaluation/tech_subset_audit.md).
+- **Chunking (data-driven):**
+  - 58.9% of postings have recognisable headers and are split into `requirements`, `responsibilities`, `nice_to_have`, `about` and `benefits`; the rest use a paragraph fallback.
+  - The split is hierarchical: `\n\n` → `\n` → sentence → word → hard cap at 800 characters.
+  - Result: **91,190 chunks, none above 800 characters**; 3.4% are still under the 100-character merge target.
+- **Token savings** for the same top-20 reranker candidates (tokens calibrated from Groq's reported usage):
+
+| Job text sent to the reranker | Avg tokens | Saved |
 |---|---|---|
-| `POST /profile` | `profile` | ProfileAgent |
-| `POST /match` | `match` | MatcherAgent |
-| `POST /gap` | `gap` | GapAnalyzerAgent |
-| `POST /tailor` | `tailor` | TailorAgent → VerifierAgent |
-| `POST /pipeline` | `pipeline` | ProfileAgent → MatcherAgent → GapAnalyzerAgent → TailorAgent → VerifierAgent (on the top match; stops after matching if nothing matched) |
+| Full postings | 10,506 | — |
+| Requirement sections | 8,708 | 17.1% (31.2% on postings with headers) |
+| First 600 characters (deployed) | 2,078 | 80.2% |
 
-Routers are pure functions of the state (they never modify it). Tailoring is always followed by verification (a fixed edge), so unverified bullets cannot be returned. `tests/test_graph.py` checks the exact set of agents each request type runs (for example, `gap` never runs the tailor or verifier).
+Chunking did not improve precision (below). Its measured value is fewer tokens and keeping marketing text out of the gap and tailoring prompts.
 
-Each agent is a thin node: it reads its inputs from the state, calls one use case, and returns only the keys it produced. Errors are **not** swallowed: a Groq rate limit inside any node reaches the API as `503` with `Retry-After`, unparseable LLM output as `502`, and an unknown job as `404`.
-
----
-
-## 3. Retrieval without embeddings
-
-**Hard constraint:** every model call goes to the Groq API, and Groq offers no embedding models. Adding another provider or running a local embedding model is out of scope by design. So CareerPilot uses lexical retrieval and uses the LLM where it helps most:
-
-1. **Query:** built from the user's preferences plus the first five profile skills.
-2. **Query expansion (Groq, fast model):** 3–6 related terms (frameworks, synonyms, acronyms).
-3. **BM25 over section chunks (SQLite FTS5, Porter stemming):** `benefits` and `about` chunks are excluded; unlabelled (`full`) chunks stay searchable.
-4. **Job score = MAX over its chunks:** a long posting with many weak chunks cannot outrank a short one with one strong requirements chunk (SUM would add length bias, AVG would dilute the strongest match).
-5. **Parent-document fetch:** the full postings of the top jobs are loaded.
-6. **LLM rerank (Groq, fast model):** the top 20 are scored 0–100 with a one-sentence reason. Jobs are ordered by the LLM score; BM25 only breaks ties. BM25 and LLM scores are never mixed on one scale.
-
-### Why no vector database? (honest version)
-
-- **The real reason is the constraint:** Groq-only, and Groq has no embeddings.
-- **What we lose:** dense retrieval matches meaning ("built REST services" ≈ "API development") even when the words differ. BM25 needs word overlap.
-- **How we compensate:** LLM query expansion adds related vocabulary before search, and LLM reranking judges semantic fit after it.
-- **What we measured:** expansion helps some profiles and hurts others (section 6). It is not a full substitute for semantic retrieval. With embeddings available, a hybrid (BM25 + dense) retriever would be the natural next step.
-- **Side benefits of the choice:** no embedding index to build (the index builds with zero LLM calls), and BM25 scores are easy to inspect.
-
----
-
-## 4. Data-driven chunking
-
-- **Data:** 13,975 tech postings (median description 3,130 characters; 91.1% contain line breaks).
-- **Headers:** 58.9% of postings have at least one recognisable section header (measured by `scripts/eda_chunking.py`). These are split into `requirements`, `responsibilities`, `nice_to_have`, `about` and `benefits`. The other 41.1% use a paragraph fallback labelled `full`.
-- **Hierarchical split:** `\n\n` → `\n` → sentence → word → hard cap at **800 characters**. The section label is kept on every piece.
-- **Result:** 91,190 chunks, **0 above 800 characters**. Fragments under 100 characters are merged into a neighbour of the same label when the merge fits under 800. **3.37% of chunks (3,069) are still under 100 characters**, because a merge would exceed the cap or there was no neighbour.
-- **Index:** SQLite FTS5 external-content table. The last rebuild (`scripts/build_index.py`, CSV loading included) took **66.3 s**, produced a **174.0 MB** database, and made zero LLM calls.
-
-
-### 4.1 Why chunk if precision is equal? Measured token savings
-
-For the same top-20 candidates the reranker receives, on each of the 6 evaluation profiles (`scripts/analysis/chunking_token_savings.py`, output `outputs/evaluation/chunking_token_savings.json`):
-
-**Method:** a 20-job prompt of full postings is about 10.5K tokens, which exceeds Groq's 8,000 tokens/minute limit in a single request. So characters were counted exactly and converted to tokens with a chars-per-token ratio calibrated from Groq's reported `usage.prompt_tokens` on 8 real postings (5.66 chars/token for full text, 5.54 for sections).
-
-| Job text sent to the reranker (20 jobs) | Avg job-text tokens | Saved vs full |
-|---|---|---|
-| Full postings (no chunking) | 10,506 | — |
-| Requirement sections only (chunking) | 8,708 | **17.1%** |
-| First 600 characters (deployed reranker) | 2,078 | 80.2% |
-
-- **Savings from sections:** only 45.8% of the candidates have recognisable headers (the rest fall back to full text). On those postings, sections save **31.2%**.
-- **Honest answer:**
-  - Chunking gives a moderate token saving (17% overall, 31% where headers exist) and keeps benefits/about marketing out of the gap and tailoring prompts, which use sections.
-  - Most of the reranker's own saving comes from truncation, not chunking.
-  - Full postings would not fit in one request under the rate limit at all.
-- **Possible improvement (not implemented):** the deployed reranker's first 600 characters are often "About us" text. Taking the 600 characters from the requirement sections would cost the same tokens with more relevant content.
-
----
-
-## 5. Agents and anti-fabrication
-
-| Agent | Use case | Model (Groq) |
-|---|---|---|
-| ProfileAgent | CV (PDF/text) → structured profile | `openai/gpt-oss-20b` |
-| MatcherAgent | expansion → BM25 → MAX → rerank | `openai/gpt-oss-20b` |
-| GapAnalyzerAgent | matched requirements with CV evidence + missing ones | `openai/gpt-oss-120b` |
-| TailorAgent | rewrite bullets for the job, using CV facts only | `openai/gpt-oss-120b` |
-| VerifierAgent | check every tailored bullet against the original CV text | `openai/gpt-oss-120b` |
-
-**Verification:**
-- Bullets are numbered; the verifier returns `{bullet_id, verdict, evidence}`.
-- Verdicts are parsed strictly: only the exact strings `"supported"` or `"unsupported"` are accepted.
-- A missing or malformed verdict becomes `unverified`, never `supported`.
-- Unsupported bullets are **removed** from `bullets` and returned separately in `removed_bullets`, with the reason.
-
-The previous version had a bug here: it checked `"supp" in verdict`, which matched "unsupported", so every rejected claim was counted as supported.
-
----
-
-## 6. Evaluation (measured, `scripts/evaluate.py`)
-
-Full generated report: [`outputs/evaluation/evaluation_report.md`](outputs/evaluation/evaluation_report.md). Raw data: `evaluation_results.json`. Earlier runs: `outputs/evaluation/runs/`.
+## Evaluation
 
 **Set-up:**
-- 6 synthetic CVs (`tests/fixtures/`): backend, data analyst, data scientist, devops, frontend (entry level), software engineer.
-- Weak relevance label: a retrieved job is relevant if its title contains a keyword of the profile's job family, matched as a whole word (so "ml" does not match "html").
-- Four keywords were added **after** inspecting retrieved titles: `scientist`; `reactjs`, `react.js`, `user interface`. Both label versions are reported.
+- 6 synthetic CVs; weak label: a job is relevant if its title contains a keyword of the CV's job family (whole-word match).
+- Four keywords were added after inspecting titles, so both label versions are reported.
+- Everything is reproducible with `python scripts/evaluate.py`; full report: [`outputs/evaluation/evaluation_report.md`](outputs/evaluation/evaluation_report.md).
 
-### 6.1 Retrieval, Precision@10
+**Precision@10**
 
-| Profile | BM25 sections | BM25 whole posting | + expansion (OR) | + expansion (weighted 0.5) | Full pipeline (expansion + rerank) |
+| Profile | BM25 sections | BM25 whole posting | + expansion (OR) | + expansion (weighted) | Full pipeline |
 |---|---|---|---|---|---|
 | backend | 0.60 | 0.90 | 0.70 | 0.70 | 0.60 |
-| data_analyst | 0.70 | 0.60 | 0.80 | 0.80 | 0.80 |
-| data_scientist | 0.10 | 0.20 | 0.80 | 0.20 | 0.60 |
+| data analyst | 0.70 | 0.60 | 0.80 | 0.80 | 0.80 |
+| data scientist | 0.10 | 0.20 | 0.80 | 0.20 | 0.60 |
 | devops | 0.80 | 0.80 | 0.60 | 0.60 | 0.60 |
 | frontend | 0.70 | 0.50 | 0.60 | 0.50 | 0.80 |
-| software_engineer | 0.90 | 0.90 | 0.80 | 0.80 | 1.00 |
-| **Macro average** | **0.633** | **0.650** | **0.717** | **0.600** | **0.733** |
+| software engineer | 0.90 | 0.90 | 0.80 | 0.80 | 1.00 |
+| **Macro** | **0.633** | **0.650** | **0.717** | **0.600** | **0.733** |
 | Macro, original label | 0.617 | 0.633 | 0.667 | 0.583 | 0.700 |
 
-"Whole posting" is a fair baseline: the same 13,975 postings, one chunk per posting, the same query and the same pipeline stage (BM25 only, job-level dedup).
+- **Chunking did not improve precision:** sections 0.633 vs whole postings 0.650 (2 wins each, 2 ties).
+- **Expansion is high-variance:** it helped 3 profiles and hurt 3. Most of the gain is the data-scientist CV, whose base query (`Python R SQL Tableau Power BI`) looked like a BI analyst. An earlier run had a negative effect.
+- **A fix was tried and rejected:** weighting the CV's own terms above expansion terms gave 0.600.
+- **Not statistically significant:** with 6 profiles every comparison has sign-test p ≥ 0.375. Read these numbers as directions.
 
-**What the numbers show:**
-- **Chunking:** sections (0.633) vs whole postings (0.650) are **effectively equal**. Whole postings win on 2 profiles, sections on 2, and 2 tie. With this label, section chunking did **not** improve Precision@10. Its measured value is in the prompts: 17% fewer reranker job-text tokens (31% on postings with headers), and no benefits/about text in the gap and tailoring prompts (section 4.1).
-- **Expansion (OR):** 0.633 → 0.717 on average, but this comes almost entirely from data_scientist (0.10 → 0.80). It improves 3 profiles and hurts 3 (devops −0.2, frontend −0.1, software engineer −0.1). With the old run's expansions the macro effect was negative (0.64 → 0.62). **Expansion is high-variance, not a reliable gain.**
-- **Why expansion helps or hurts:**
-  - It rescues data_scientist: the base query (from the first five skills) is `Python R SQL Tableau Power BI`, which reads like a BI analyst. The expansion adds `NumPy`, `Scikit-learn`, which pulls in data-science jobs.
-  - It hurts frontend: `Next.js`, `Redux`, `GraphQL` pull in generic "Software Engineer" titles. All terms are ORed with equal weight, so expansion terms can dominate (query drift).
-- **The fix we tried:** weighting the original terms higher (`score = original + 0.5 × expansion`; the weight was chosen before seeing results, not tuned). It made expansion almost inert: 0.600 macro, and it removed the data_scientist gain. **Rejected;** the deployed system keeps OR expansion.
-- **data_scientist investigation:** the label was only slightly too narrow (adding `scientist` changes one title). The main cause of 0.0–0.1 is the query built from the first five skills. The CV itself also says it seeks "data analytics and machine learning" roles, so analyst jobs are arguably relevant, which a single-family label cannot express.
-- **Rerank:** full pipeline 0.733 vs expansion-only 0.717. Up on 2 profiles, down on 2.
-- **Significance:** with 6 profiles none of these differences is statistically significant. A paired sign test gives p ≥ 0.375 for every comparison. The weak label is also noisy: duplicate reposts and single-family labels affect it.
+**Faithfulness of real tailoring** (the Verifier's judgment of 56 tailored bullets):
 
-### 6.2 Faithfulness of real tailoring
-
-For each profile, the top job from the full pipeline was tailored and every bullet verified. We changed one variable per run:
-
-| Run | Tailor model | Tailor prompt | Supported / claims | Rate |
-|---|---|---|---|---|
-| 1 | gpt-oss-20b | original | 45 / 56 | 0.804 |
-| 2 | gpt-oss-20b | + "never copy a tool from the job posting into a bullet" | 47 / 56 | 0.839 |
-| 3 (deployed) | gpt-oss-120b | + same rule | **54 / 56** | **0.964** |
-
-- **Why the fast model was rejected for tailoring:** it stuffed job keywords into bullets (Tableau → "Power BI", a Go pipeline → "Java-based", a Vue.js project → "React"). The verifier caught all of these and removed them.
-- **The 2 claims removed in run 3:** "Weather dashboard in React" (the CV says Vue.js) and "delivering insights to senior stakeholders" (not in the CV).
-- **For comparison:** the previous version reported 100%, but with its verdict-parsing bug. The raw verdicts in the old cache show 34/38 = 89.5%.
-- **Caveat:** this is an LLM judging an LLM. Some removals in run 2 were embellishments ("clean, maintainable code") rather than invented facts. We have no human labels to measure the verifier's false alarms on real tailoring.
-
-### 6.3 Adversarial verifier test (not circular)
-
-**Set-up:** for each CV, 4 verbatim bullets (controls) are mixed with 4 bullets that each carry one planted fabrication:
-- a fake skill ("using Rust and Elixir")
-- a fake metric ("cutting infrastructure costs by 73%")
-- a fake employer ("while on contract at Goldman Sachs")
-- a fake certification ("Google Professional Cloud Architect")
-
-Each fabrication is checked to be absent from that CV.
-
-| Fabrication type | Caught | Planted | Recall |
+| Run | Tailor model | Prompt | Supported |
 |---|---|---|---|
-| fake skill | 6 | 6 | 1.0 |
-| fake metric | 6 | 6 | 1.0 |
-| fake employer | 6 | 6 | 1.0 |
-| fake certification | 6 | 6 | 1.0 |
-| **All** | **24** | **24** | **1.0** |
+| 1 | gpt-oss-20b | original | 45/56 (80.4%) |
+| 2 | gpt-oss-20b | strict: never copy tools from the job posting | 47/56 (83.9%) |
+| 3 (deployed) | gpt-oss-120b | strict | **54/56 (96.4%)** |
 
-Controls judged supported: 24/24 (0 false alarms).
+- **Why tailoring runs on the larger model:** the fast model copied job keywords into bullets (Tableau → "Power BI"), and the Verifier removed them.
+- **Adversarial test** (since this is an LLM judging an LLM): 24 planted fabrications (fake skill, metric, employer, certification) were **all caught**, and 24/24 real CV bullets were kept.
+- **Limit:** the fabrications are blatant; subtle exaggeration is not tested.
 
-**Limits:** these fabrications are blatant, one appended phrase each. Subtle exaggeration (e.g., "led" instead of "participated") is not tested. With 24 planted claims, 100% recall still leaves real uncertainty; a 95% confidence interval would reach down to about 86%.
+**Cost:** one cold full run makes 6 Groq calls, uses 11,968 tokens (6,381 on 20b, 5,587 on 120b) and takes 23.7 s, with **0 rate-limit errors**. Both models allow 8,000 tokens/minute.
 
----
+## Tech stack
 
-## 7. Demo safety (Groq rate limits)
+| Area | Tools |
+|---|---|
+| Backend | Python 3.11, FastAPI, Pydantic, LangGraph, tenacity |
+| LLM | Groq API only: `openai/gpt-oss-20b` (profile, expansion, rerank), `openai/gpt-oss-120b` (gap, tailor, verifier) |
+| Retrieval | SQLite FTS5 (BM25), no embeddings, no vector DB |
+| Data | pandas, pypdf, Kaggle LinkedIn job postings |
+| Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS, lucide-react, framer-motion |
+| Quality | pytest (135 tests), ESLint, architecture test for the dependency rule |
 
-- **Limit:** both models have **8,000 tokens/minute** each (read from Groq's `x-ratelimit-limit-tokens` header). The limit is per model, so the steps are split across the two models.
-- **Token reduction:**
-  - `reasoning_effort=low` for the gpt-oss models (they spend completion tokens on hidden reasoning).
-  - Gap analysis and tailoring receive only the requirement-bearing sections of the posting, not the full text.
-- **Retries:** on a 429 the client waits as long as Groq's `retry-after` header says, instead of a short fixed backoff.
+## Project structure
 
-**One cold full pipeline** (`scripts/warm_demo_cache.py` with an empty cache):
-
-| Step | Model | Tokens | Live latency |
-|---|---|---|---|
-| profile extraction | 20b | 1,595 | 1.3 s |
-| query expansion | 20b | 489 | 0.6 s |
-| rerank | 20b | 4,297 | 1.3 s |
-| gap analysis | 120b | 1,886 | 1.7 s |
-| tailoring | 120b | 1,886 | 6.0 s |
-| verification | 120b | 1,815 | 12.8 s |
-| **Total** | | **11,968** (20b 6,381 · 120b 5,587) | **23.7 s wall** |
-
-- **One pipeline per minute fits both limits, with 0 × 429.** The previous version's evaluation logged 22.5K tokens for tailor + verify across 4 profiles (about 5.6K per profile); it is now about 3.7K.
-- **Two cold pipelines within one minute would exceed the 20b budget.** The client would then wait for the window; it would not fail.
-- **Demo procedure:** run `python scripts/warm_demo_cache.py` before the demo. After that, `/pipeline`, `/profile`, `/match`, `/gap` and `/tailor` for the demo CV made **0 Groq calls** (verified through the real API: 12 cache hits, 0 calls).
-- **Caveat:** a *different* CV during the demo makes live calls.
-
----
-
-## 8. Running it (fresh clone)
-
-Windows paths shown; the commands are the same on macOS/Linux.
-
-```bash
-# 1. Code and environment (Python 3.11)
-git clone <repo-url> careerpilot && cd careerpilot
-conda create -n careerpilot python=3.11 -y
-conda activate careerpilot
-pip install -r requirements.txt
-
-# 2. Secrets: copy the template, then edit .env
-copy .env.example .env          # macOS/Linux: cp .env.example .env
-#    GROQ_API_KEY=gsk_...       (required, https://console.groq.com/keys)
-#    ADMIN_TOKEN=<long random>  (optional; enables POST /ingest)
-
-# 3. Data (Kaggle: arshkon/linkedin-job-postings, needs ~/.kaggle/kaggle.json)
-kaggle datasets download -d arshkon/linkedin-job-postings -p data --unzip
-#    expected: data/postings.csv, data/jobs/job_skills.csv, data/jobs/job_industries.csv,
-#              data/mappings/skills.csv, data/mappings/industries.csv
-
-# 4. Build the search index (zero LLM calls, about 1 minute, about 174 MB)
-python scripts/build_index.py
-
-# 5. Tests (130; never call Groq, and need neither .env nor the index)
-python -m pytest
-
-# 6. Before a demo: fill the LLM cache for the demo CV (then the demo makes 0 Groq calls)
-python scripts/warm_demo_cache.py
-
-# 7. Run the API: open http://127.0.0.1:8000/docs
-uvicorn src.api.main:app --host 127.0.0.1 --port 8000
+```
+src/
+  domain/          entities, ports (interfaces), scoring
+  application/     one use case per step
+  agents/          LangGraph graph, agent nodes, workflow facade
+  infrastructure/  SQLite FTS5, Groq client + port implementations, prompts, chunkers, parser, loader
+  api/             FastAPI endpoints, schemas, error handlers, dependency wiring
+frontend/          Next.js web UI
+scripts/           build_index, evaluate, warm_demo_cache, analysis/
+tests/             backend tests + synthetic CV fixtures
+outputs/evaluation/  measured results
+docs/              walkthrough (Arabic), screenshots
 ```
 
-**Optional:**
-- `python scripts/evaluate.py` re-runs the full evaluation. It uses Groq, so expect several minutes because of rate-limit waits.
-- `python scripts/eda_chunking.py` re-runs the chunking EDA.
+## Quickstart
+
+### Backend
+
+```bash
+git clone <repo-url> careerpilot && cd careerpilot
+conda create -n careerpilot python=3.11 -y && conda activate careerpilot
+pip install -r requirements.txt
+
+copy .env.example .env      # macOS/Linux: cp .env.example .env
+# set GROQ_API_KEY (https://console.groq.com/keys); optional ADMIN_TOKEN enables POST /ingest
+
+# data (needs Kaggle credentials in ~/.kaggle/kaggle.json)
+kaggle datasets download -d arshkon/linkedin-job-postings -p data --unzip
+
+python scripts/build_index.py        # about 1 minute, zero LLM calls
+python -m pytest                     # 135 tests, never call Groq
+python scripts/warm_demo_cache.py    # pre-cache the demo CV
+uvicorn src.api.main:app --host 127.0.0.1 --port 8000   # docs at /docs
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+copy .env.example .env.local        # NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+npm run dev                          # http://localhost:3000
+```
+
+The API only accepts browser requests from `ALLOWED_ORIGINS` (default `http://localhost:3000`). Deployment notes (UI on Vercel, API on a host such as Render) are in [`frontend/README.md`](frontend/README.md).
+
+## API reference
 
 | Method | Endpoint | Purpose | Errors |
 |---|---|---|---|
-| GET | `/health` | job/chunk counts, FTS5 availability | |
-| POST | `/profile` | CV file (`.pdf`/`.txt`) or `raw_text` → profile | 400, 502, 503 |
-| POST | `/match` | profile + preferences → top-k jobs with reasons | 502, 503 |
-| POST | `/gap` | profile + `job_id` → matched (with evidence) / missing | 404, 502, 503 |
-| POST | `/tailor` | profile + `job_id` → verified bullets + `removed_bullets` | 404, 502, 503 |
+| GET | `/health` | Job/chunk counts, FTS5 availability | |
+| POST | `/profile` | CV file (`.pdf`/`.txt`) or `raw_text` → structured profile | 400, 502, 503 |
+| POST | `/match` | Profile + preferences → top-k jobs with reasons | 502, 503 |
+| POST | `/gap` | Profile + `job_id` → matched (with evidence) and missing requirements | 404, 502, 503 |
+| POST | `/tailor` | Profile + `job_id` → verified bullets and `removed_bullets` | 404, 502, 503 |
 | POST | `/pipeline` | CV → profile, matches, gap and verified tailoring for the top match | 400, 502, 503 |
-| POST | `/ingest` | rebuild index; requires header `X-Admin-Token` = `ADMIN_TOKEN` | 401, 403 |
+| POST | `/ingest` | Rebuild the index (header `X-Admin-Token`) | 401, 403 |
 
-`503` = Groq rate limit after retries (with `Retry-After`), `502` = Groq error or unparseable output.
+`503` = Groq rate limit after retries (with `Retry-After`); `502` = Groq error or unreadable model output.
 
----
+## Testing
 
-## 9. OOP and SOLID in the code
+```bash
+python -m pytest            # backend: 135 tests
+cd frontend && npm run lint && npm run build
+```
 
-| Principle | Where |
-|---|---|
-| Abstraction / polymorphism | Ports in `domain/interfaces.py`; `BaseAgent.run(state)` implemented by five agents and invoked uniformly by LangGraph; `Chunker.chunk()` (section / paragraph / composite / whole-posting in the evaluation) |
-| Encapsulation | Entities validate their own invariants; `TailoredCV.apply_verification` is the only way unsupported bullets are removed |
-| Inheritance | `CareerPilotError` hierarchy (mapped to HTTP codes in `api/error_handlers.py`); agents extend `BaseAgent` |
-| S | Each use case does one job; prompts live next to the Groq implementation that uses them |
-| O | New chunkers register in `ChunkerFactory`; a new LLM provider would be a new port implementation, with no use-case changes |
-| L | `tests/fakes.py` substitutes every port; use cases and the graph run unchanged on fakes |
-| I | `Retriever` (read) vs `SearchIndexWriter` (write) vs `JobRepository` vs `IndexStatsReader` |
-| D | Use cases receive ports; only `api/dependencies.py` and scripts create concrete classes. This is enforced by `tests/test_architecture.py` |
+- **`test_architecture.py`:** fails if `domain` imports another layer or a framework, if `application` imports `agents`/`infrastructure`/`api`, or if an inner layer imports an outer one.
+- **`test_graph.py`:** checks exactly which agents run for each request type (e.g. `gap` never runs the tailor).
+- **`test_api_endpoints.py`:** runs the real graph with fake ports and checks that a Groq 429 inside an agent reaches the client as 503.
+- **Also covered:** strict verdict parsing, reranker ordering, CORS, and ingest authentication.
+- **Fakes, not Groq:** all tests use fakes (`tests/fakes.py`).
 
----
+## Limitations and future work
 
-## 10. Known limitations
+- **Tech subset:** 82% measured precision; the "engineer + ENG skill tag" rule admits plant and process engineering jobs and should be tightened.
+- **Reranker input:** it sees the first 600 characters of each posting, often company marketing. Using the requirement sections would cost the same tokens with more relevant text.
+- **Query building:** it uses only the first five extracted skills; building it from the target role and all skills should help profiles like the data scientist.
+- **Evaluation:** 6 synthetic CVs and a weak title-based label are not enough for significance. More profiles and human relevance judgments are needed.
+- **Verifier:** it checks bullets but not the one-line tailoring summary; its false-alarm rate on real tailoring is unmeasured.
+- **Deployment:** the UI is Vercel-ready; the API needs a host with persistent disk (index + LLM cache). Not deployed yet.
 
-- **Evaluation size:** 6 synthetic CVs and a weak title-family label. There are no human relevance judgments, and the differences are not significant.
-- **Query:** it uses only the first five extracted skills, and extraction order depends on the LLM. With a cold cache the demo CV's top match changed between runs (LLM outputs are not fully deterministic at temperature 0).
-- **Verification scope:** the verifier checks bullets, not the one-line tailoring summary. It is itself an LLM, so its false-alarm rate on real tailoring is unmeasured.
-- **Data:** the dataset contains reposted duplicates, so the same title can appear twice in a top-10.
-- **Tech-subset precision:** a fresh random audit (50 postings, seed 42, one annotator) gives **82%** (41/50), or 88% if industrial PLC-controls jobs count as tech. That is lower than the previous tool's 94%. The errors are non-software engineering jobs (boilers, plant instrumentation, photonics, solid waste) and one apparel role. Details: [`outputs/evaluation/tech_subset_audit.md`](outputs/evaluation/tech_subset_audit.md).
+## Author
+
+**Ahmed Wael Abdelmoaty**
