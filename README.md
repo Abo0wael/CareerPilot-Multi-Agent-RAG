@@ -107,7 +107,7 @@ flowchart LR
 | `POST /tailor` | Tailor → Verifier |
 | `POST /pipeline` | Profile → Matcher → Gap → Tailor → Verifier (for the top match) |
 
-A step-by-step code walkthrough of `/pipeline` (in Egyptian Arabic) is in [`docs/walkthrough_ar.md`](docs/walkthrough_ar.md).
+A step-by-step code walkthrough of `/pipeline` (in Egyptian Arabic) is in [`docs/walkthrough_ar.md`](docs/walkthrough_ar.md). [`REVIEW_REPORT.md`](REVIEW_REPORT.md) records the code review: what was wrong, how each issue was fixed, and the measured results.
 
 ## Retrieval without embeddings
 

@@ -16,3 +16,6 @@ __pycache__/
 dist/
 build/
 .mypy_cache/
+
+# Local AI-assistant instructions (not part of the project)
+CLAUDE.md
