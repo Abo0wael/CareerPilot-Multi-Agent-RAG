@@ -219,7 +219,7 @@ export default function HowItWorks() {
           </Finding>
           <Finding tone="negative">
             <strong>A fix was tried and rejected.</strong> Weighting the CV&apos;s own terms above expansion terms gave{" "}
-            {f3(macro.sections_exp_weighted)} (it removed the data-scientist gain), so the deployed system keeps OR expansion.
+            {f3(macro.sections_exp_weighted)} (it removed the data-scientist gain), so the current system keeps OR expansion.
           </Finding>
           <Finding tone="neutral">
             <strong>Not statistically significant.</strong> With {fixturesEvaluated} profiles, every comparison has sign-test p
@@ -299,7 +299,7 @@ export default function HowItWorks() {
                   `${tokenSavings.average_saved_vs_full_pct.sections}%`,
                 ],
                 [
-                  "First 600 chars (deployed)",
+                  "First 600 chars (current reranker)",
                   tokenSavings.average_job_text_tokens_per_rerank_call.deployed.toLocaleString("en-US"),
                   `${tokenSavings.average_saved_vs_full_pct.deployed}%`,
                 ],

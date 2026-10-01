@@ -107,20 +107,13 @@ def _use_fake_graph(job: JobPosting, gap: GapAnalyzer | None = None, fabrication
 
 
 class TestHealth:
-    def test_health_is_liveness_only(self, client: TestClient) -> None:
-        reader = MagicMock(spec=IndexStatsReader)
-        app.dependency_overrides[get_index_stats] = lambda: reader
-
-        assert client.get("/health").json() == {"status": "ok"}
-        reader.get_stats.assert_not_called()  # cheap: never opens the index
-
-    def test_index_stats_use_stats_port(self, client: TestClient) -> None:
+    def test_health_uses_stats_port(self, client: TestClient) -> None:
         reader = MagicMock(spec=IndexStatsReader)
         reader.get_stats.return_value = IndexStats(total_jobs=567, total_chunks=1234, fts5_available=True)
         app.dependency_overrides[get_index_stats] = lambda: reader
 
-        data = client.get("/health/index").json()
-        assert data == {"fts5_available": True, "total_jobs": 567, "total_chunks": 1234}
+        data = client.get("/health").json()
+        assert data == {"status": "ok", "fts5_available": True, "total_jobs": 567, "total_chunks": 1234}
 
 
 class TestProfile:

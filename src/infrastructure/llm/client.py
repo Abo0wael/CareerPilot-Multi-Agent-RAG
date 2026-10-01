@@ -90,29 +90,6 @@ class GroqClient(LLMClient):
         self.total_completion_tokens: int = 0
         self.total_tokens: int = 0
         self.rate_limit_hits: int = 0
-        self.fallback_count: int = 0
-
-    def get_metrics(self) -> dict[str, int]:
-        """Return cumulative Groq API calls and token counts."""
-        return {
-            "call_count": self.call_count,
-            "cache_hits": self.cache_hits,
-            "total_prompt_tokens": self.total_prompt_tokens,
-            "total_completion_tokens": self.total_completion_tokens,
-            "total_tokens": self.total_tokens,
-            "rate_limit_hits": self.rate_limit_hits,
-            "fallback_count": self.fallback_count,
-        }
-
-    def reset_metrics(self) -> None:
-        """Reset usage metrics to zero."""
-        self.call_count = 0
-        self.cache_hits = 0
-        self.total_prompt_tokens = 0
-        self.total_completion_tokens = 0
-        self.total_tokens = 0
-        self.rate_limit_hits = 0
-        self.fallback_count = 0
 
     def _reasoning_effort(self, model_name: str) -> str:
         """Reasoning effort applies to gpt-oss models only ('' = provider default)."""
@@ -232,8 +209,6 @@ class GroqClient(LLMClient):
                     raise
                 logger.warning("%s is rate-limited; falling back to %s", candidate, chain[position + 1])
                 continue
-            if candidate != model_name:
-                self.fallback_count += 1
             return text, candidate
         raise AssertionError("fallback chain always contains the requested model")
 

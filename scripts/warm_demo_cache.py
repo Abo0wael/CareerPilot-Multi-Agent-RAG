@@ -39,6 +39,8 @@ from src.infrastructure.config import get_settings  # noqa: E402
 from src.infrastructure.llm.client import GroqClient  # noqa: E402
 
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+# LLM output contains characters such as U+2011 that the Windows console code page cannot encode.
+sys.stdout.reconfigure(encoding="utf-8")
 
 FIXTURES = _ROOT / "tests" / "fixtures"
 OUTPUT = _ROOT / "outputs" / "evaluation" / "demo_warmup.json"

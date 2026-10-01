@@ -141,15 +141,13 @@ def precision_at_k(matches: list[JobMatch], family: str, k: int = K, revised: bo
 # ── Instrumentation ──────────────────────────────────────────────────
 
 class RecordingExpander(QueryExpander):
-    """Delegates to the real expander and remembers the last queries (for the report)."""
+    """Delegates to the real expander and remembers the last expanded query (for the report)."""
 
     def __init__(self, inner: QueryExpander) -> None:
         self._inner = inner
-        self.last_input: Optional[SearchQuery] = None
         self.last_output: Optional[SearchQuery] = None
 
     def expand(self, query: SearchQuery) -> SearchQuery:
-        self.last_input = query
         self.last_output = self._inner.expand(query)
         return self.last_output
 

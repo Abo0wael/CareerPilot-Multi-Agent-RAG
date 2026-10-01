@@ -1,11 +1,11 @@
-"""Run the web UI's request sequence against a running API (local, Docker or the public Space).
+"""Run the web UI's request sequence against the running local API.
 
 For each scenario: POST /profile -> /match -> /gap -> /tailor, exactly like the UI
 (same demo CV files, empty preferences, top_k=10). Prints time per step and which
 model answered each agent (cached / fallback). Exits non-zero on any HTTP error.
 
 Usage:
-    python scripts/smoke_test_api.py --base-url http://127.0.0.1:7860 [--origin https://x.vercel.app]
+    python scripts/smoke_test_api.py --base-url http://127.0.0.1:8000 [--origin http://localhost:3000]
         [--scenario demo1 demo2 fresh] [--fresh-cv path/to/cv.txt]
 """
 
@@ -20,6 +20,8 @@ import urllib.request
 import uuid
 from pathlib import Path
 from typing import Any, Optional
+
+sys.stdout.reconfigure(encoding="utf-8")  # job titles and LLM text are not cp1252-safe
 
 _ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = _ROOT / "tests" / "fixtures"
@@ -102,7 +104,7 @@ def run(api: Api, name: str, cv: Path, job_id: Optional[int]) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--base-url", required=True)
-    parser.add_argument("--origin", help="Send this Origin header and check the CORS answer (e.g. the Vercel URL).")
+    parser.add_argument("--origin", help="Send this Origin header and check the CORS answer (e.g. the UI, http://localhost:3000).")
     parser.add_argument("--scenario", nargs="+", default=["demo1", "demo2"], choices=[*DEMOS, "fresh"])
     parser.add_argument("--fresh-cv", type=Path, default=FIXTURES / "sample_cv_data_scientist.txt")
     parser.add_argument("--timeout", type=float, default=600)
@@ -116,7 +118,6 @@ def main() -> None:
         print(f"CORS for {args.origin}: {'allowed' if allowed == args.origin else f'NOT allowed ({allowed})'}")
         if allowed != args.origin:
             sys.exit(1)
-    print(f"/health/index -> {api.get('/health/index')[0]}")
 
     results = {}
     for name in args.scenario:

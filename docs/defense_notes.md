@@ -74,7 +74,12 @@ Short, honest answers to the questions most likely to come up. Every number is i
 **What if Groq rate-limits during the demo?**
 - **The limit:** 8,000 tokens per minute per model. One cold full run uses about 6.4K tokens on 20b and 5.6K on 120b, so it fits.
 - **The demo CV is pre-cached** (`scripts/warm_demo_cache.py`): it makes 0 Groq calls.
-- **If a 429 happens anyway:** the client waits for Groq's `retry-after`; if that still fails, the API returns 503 and the UI shows a countdown.
+- **If a 429 happens anyway:** the client waits for Groq's `retry-after` and retries. If the model is still limited, it sends the same request to the next model (`gpt-oss-120b → gpt-oss-20b → qwen/qwen3.8-27b`), and the UI labels that agent "answered by fallback model". Only if all three are limited does the API return 503, and the UI shows a countdown.
+
+**How does the UI know a fallback model answered?**
+- **`model_calls`:** every response lists, per LLM request, the agent, the requested model, the model that answered and whether it was cached.
+- **How it is tracked:** a domain port (`ModelUsageTracker`) implemented with context variables, so concurrent requests do not mix. Each graph node runs inside `tracker.step(agent.name)`.
+- **Cache:** fallback answers are cached under the fallback model, so the primary model's cache (the demos) is unchanged.
 
 **Why did the top match change between runs?**
 - **Nondeterminism:** LLM outputs are not fully deterministic even at temperature 0, and the query depends on the order of extracted skills.
@@ -85,4 +90,4 @@ Short, honest answers to the questions most likely to come up. Every number is i
 - **Reranker:** feed it the requirement sections instead of the first 600 characters.
 - **Evaluation:** more profiles plus human labels.
 - **Query:** build it from the role and all skills, not just the first five.
-- **Deployment:** host the backend (Render) and the UI (Vercel).
+- **Verifier:** catch subtle inflation ("production-grade", "and deployments", "test-driven development" were all marked supported in testing).

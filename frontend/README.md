@@ -10,7 +10,9 @@ It talks **only** to the FastAPI backend (`NEXT_PUBLIC_API_URL`). It never calls
 cd frontend
 npm install
 copy .env.example .env.local        # macOS/Linux: cp .env.example .env.local
-npm run dev                         # http://localhost:3000
+npm run dev                         # http://localhost:3000 (development)
+# or, as on the demo day:
+npm run build && npm start          # production build, http://localhost:3000
 ```
 
 `predev` and `prebuild` run `scripts/sync-data.mjs`. It copies the measured evaluation results from `../outputs/evaluation/` and the demo CV from `../tests/fixtures/` into `src/data/` and `public/demo/`. The copies are committed, so the UI still builds if the Python project is not next to it.
@@ -33,12 +35,6 @@ src/lib/evaluation.ts     measured results read from src/data/*.json
 
 - **Real progress:** each agent's waypoint changes only when its request actually starts or returns.
 - **Tailor and Verifier:** they share `POST /tailor`, because the LangGraph graph always verifies after tailoring, so they finish together.
-- **Rate limits:** a `503` shows Groq's `Retry-After` as a countdown before retry is allowed.
-
-## Deployment
-
-See [`../docs/DEPLOY.md`](../docs/DEPLOY.md). In short: the UI runs on Vercel with
-`NEXT_PUBLIC_API_URL` set to the Hugging Face Space URL. That variable always wins over
-the local fallback, which uses port 8000 on the page's host. Set it before you build.
-
-The backend does not fit Vercel's serverless functions: it needs the 174 MB SQLite index on disk, its requests can take 20–30 s, and it is a long-running uvicorn process. That is why it runs in a Docker Space.
+- **Model fallback:** each response lists `model_calls`. If a rate-limited model was replaced by a fallback model, the agent's waypoint shows "answered by fallback model" (hover for the model name).
+- **Rate limits:** a `503` (every fallback model rate-limited) shows Groq's `Retry-After` as a countdown before retry is allowed.
+- **API URL:** `NEXT_PUBLIC_API_URL` (read at build time) wins; without it the UI calls port 8000 on the host that serves the page.

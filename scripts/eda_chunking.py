@@ -82,8 +82,7 @@ def main() -> None:
 
     # ── 2. Tech subset ───────────────────────────────────────────────
     job_skills = loader.load_job_skills()
-    job_industries = loader.load_job_industries()
-    tech_df = loader.filter_tech_subset(df, job_skills, job_industries)
+    tech_df = loader.filter_tech_subset(df, job_skills)
 
     print(f"\n{'='*70}")
     print(f"  TOTAL POSTINGS (after cleaning):  {len(df):,}")

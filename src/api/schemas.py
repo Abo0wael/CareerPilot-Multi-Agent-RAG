@@ -136,12 +136,7 @@ class JobTargetRequest(BaseModel):
 # ── Responses ────────────────────────────────────────────────────────
 
 class HealthResponse(BaseModel):
-    """Liveness only: answers without touching the index (cheap after a cold start)."""
-
     status: str
-
-
-class IndexStatsResponse(BaseModel):
     fts5_available: bool
     total_jobs: int
     total_chunks: int

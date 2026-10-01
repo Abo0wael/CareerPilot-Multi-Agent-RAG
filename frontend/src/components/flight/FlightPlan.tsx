@@ -36,7 +36,7 @@ function Working({ children }: { children: ReactNode }) {
 
 export function FlightPlan({ autoDemo }: { autoDemo: DemoScenario["id"] | null }) {
   const flight = useFlightPlan();
-  const { agents, models, server, profile, matches, selectedJobId, gap, tailored, error, busy } = flight;
+  const { agents, models, profile, matches, selectedJobId, gap, tailored, error, busy } = flight;
   const selectedJob = matches?.find((m) => m.job_id === selectedJobId);
   const demoStarted = useRef(false);
   const revealRemoved = useRef(false);
@@ -89,12 +89,6 @@ export function FlightPlan({ autoDemo }: { autoDemo: DemoScenario["id"] | null }
       {/* Sticky on wide screens so progress and errors stay visible while you scroll the results. */}
       <div className="z-30 -mx-1 flex flex-col gap-2 bg-paper/95 px-1 py-2 backdrop-blur-sm md:sticky md:top-16">
         <AgentTimeline agents={agents} models={models} />
-        {server === "waking" && (
-          <p role="status" className="flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm text-muted">
-            <Loader2 size={16} className="animate-spin text-beacon" aria-hidden />
-            Waking up the server… The free hosting sleeps when idle; the first start takes up to a minute or two.
-          </p>
-        )}
         {busy && (
           <Button variant="ghost" onClick={flight.cancel} className="self-end py-1">
             <Square size={12} aria-hidden /> Cancel

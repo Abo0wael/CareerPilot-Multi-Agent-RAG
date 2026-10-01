@@ -1,7 +1,7 @@
 # CareerPilot: Review Report
 
-> **Author:** Ahmed (CS student) | **State:** final, after the architecture, honesty and evaluation fixes (2026-10-01)
-> **Tests:** 130 passing (`C:\Anaconda\envs\careerpilot\python.exe -m pytest`), none of which call Groq.
+> **Author:** Ahmed (CS student) | **State:** final, local-only (2026-10-01); adds model fallback on rate limits
+> **Tests:** 148 passing (`C:\Anaconda\envs\careerpilot\python.exe -m pytest`), none of which call Groq.
 
 This report records what the system does, what was wrong when it was handed over, what was changed, and the measured results. The README has the user-facing overview; `outputs/evaluation/evaluation_report.md` has the generated evaluation tables.
 
@@ -11,23 +11,26 @@ This report records what the system does, what was wrong when it was handed over
 
 - Windows, conda env `careerpilot`, Python 3.11.16 (`C:\Anaconda\envs\careerpilot\python.exe`).
 - Dependencies are in `requirements.txt`. `groq` is now declared directly; the unused `langchain-groq` / `langchain-core` were removed.
-- `.env` holds `GROQ_API_KEY`, `GROQ_FAST_MODEL=openai/gpt-oss-20b`, `GROQ_AGENT_MODEL=openai/gpt-oss-120b`, and optionally `ADMIN_TOKEN`, per-step models and `GROQ_REASONING_EFFORT` (see `.env.example`).
+- `.env` holds `GROQ_API_KEY`, `GROQ_FAST_MODEL=openai/gpt-oss-20b`, `GROQ_AGENT_MODEL=openai/gpt-oss-120b`, and optionally `ADMIN_TOKEN`, per-step models, `GROQ_FALLBACK_MODELS`, `GROQ_REASONING_EFFORT` and `ALLOWED_ORIGINS` (see `.env.example`).
+- The project runs locally only (API on `127.0.0.1:8000`, UI on `localhost:3000`); there is no hosted deployment.
 - Never committed: `data/`, `index/`, `.env`, `.llm_cache/`. `outputs/evaluation/` **is** committed (graded deliverable).
 
 ## 2. File tree (source)
 
 ```
 src/
-  domain/          entities.py, exceptions.py, interfaces.py (13 ports), scoring.py (MAX aggregation, weighted fusion)
+  domain/          entities.py, exceptions.py, interfaces.py (15 ports), scoring.py (MAX aggregation, weighted fusion)
   application/     build_profile, match_jobs, analyze_gap, tailor_cv, verify_tailored_cv, ingest_jobs
   agents/          base.py, profile/matcher/gap/tailor/verifier agents, graph.py (routing), workflow.py (facade)
   infrastructure/  config.py, chunking/, data/loader.py (JobSource), parsing/cv_parser.py,
                    search/sqlite_index.py (Retriever, SearchIndexWriter, IndexStatsReader, JobRepository),
                    retrieval/expander.py, retrieval/reranker.py,
-                   llm/client.py, llm/{profile_extractor, gap_analyzer, cv_tailor, claim_verifier}.py,
+                   llm/client.py (retries + model fallback), llm/model_usage.py (ModelUsageTracker),
+                   llm/{profile_extractor, gap_analyzer, cv_tailor, claim_verifier}.py,
                    llm/formatting.py, llm/prompts/
   api/             main.py (endpoints), schemas.py, error_handlers.py, dependencies.py (composition root)
-scripts/           build_index.py, evaluate.py, warm_demo_cache.py, metering.py, eda_chunking.py, analysis/
+scripts/           build_index.py, evaluate.py, warm_demo_cache.py, smoke_test_api.py, metering.py, eda_chunking.py,
+                   analysis/sample_final_index.py (audit sample), analysis/chunking_token_savings.py
 tests/             130 tests + fakes.py + conftest.py
 ```
 
@@ -75,7 +78,7 @@ The dead `InterviewCoachAgent` was removed: it had no endpoint and its prompt ne
 
 **Token savings from chunking** (`outputs/evaluation/chunking_token_savings.json`): for the same top-20 reranker candidates on the 6 profiles, sending requirement sections instead of full postings saves **17.1%** of job-text tokens on average (10,506 → 8,708), and **31.2%** on the 45.8% of candidates that have headers.
 - **Method:** exact character counts, converted with a chars/token ratio calibrated from Groq `usage.prompt_tokens` on 8 real postings. The full-posting prompt (about 10.5K tokens) exceeds the 8K TPM limit in one request, so it could not be measured by sending it.
-- **Deployed reranker:** it sends the first 600 characters (2,078 tokens, 80.2% saved). Its saving comes from truncation, not chunking.
+- **Current reranker:** it sends the first 600 characters (2,078 tokens, 80.2% saved). Its saving comes from truncation, not chunking.
 
 **Index:** FTS5 external-content table, `porter unicode61` tokenizer. The last rebuild took 66.3 s (CSV loading included), produced 174.0 MB after `VACUUM`, and made 0 LLM calls. The earlier 47.6 s / 156.4 MB figures could not be reproduced.
 
@@ -85,7 +88,7 @@ The dead `InterviewCoachAgent` was removed: it had no endpoint and its prompt ne
 
 - **Query:** preferences + first five profile skills → Groq expansion (20b) → BM25 over non-benefits/about chunks (top 50 chunks) → job score = MAX over its chunks → full postings → Groq rerank of the top 20 (20b) → top 10.
 - **Expansion options:**
-  - `expansion_weight=None` (deployed): OR all terms.
+  - `expansion_weight=None` (current): OR all terms.
   - `expansion_weight=w`: `original + w·expansion` fusion. Evaluated and rejected (section 7).
 - **Agents:** thin LangGraph nodes over one use case each. Models: profile 20b; gap, tailor and verifier 120b; `reasoning_effort=low`.
 - **Prompt budget:** gap and tailor prompts receive only the requirement/responsibility/nice-to-have sections of the posting (`llm/formatting.py`), capped at 4,000 and 2,500 characters.
@@ -96,7 +99,7 @@ The dead `InterviewCoachAgent` was removed: it had no endpoint and its prompt ne
 
 | Error | HTTP |
 |---|---|
-| `LLMRateLimitError` (after retries that wait for Groq's `retry-after`) | 503 + `Retry-After` |
+| `LLMRateLimitError` (every model in the fallback list still rate-limited after its retries) | 503 + `Retry-After` |
 | `LLMError`, `LLMResponseParseError` | 502 |
 | `JobNotFoundError` | 404 |
 | `CVParsingError`, `EmptyFieldError`, `InvalidEntityError`, `WorkflowStateError` | 400 |
@@ -104,6 +107,11 @@ The dead `InterviewCoachAgent` was removed: it had no endpoint and its prompt ne
 | other `CareerPilotError` | 500 |
 
 API tests run the real graph with fake ports and check that a 429 raised inside a node reaches the client as 503.
+
+**Model fallback.** `GroqClient` retries a 429 for as long as Groq's `retry-after` asks, up to `llm_max_retries`, and stops early if the requested wait exceeds `llm_retry_max_wait` (60 s, e.g. a daily limit). If the model is still rate-limited, the same request is sent to the next model in `GROQ_FALLBACK_MODELS` (default `openai/gpt-oss-120b, openai/gpt-oss-20b, qwen/qwen3.8-27b`). These were the only chat models with JSON mode listed for the account; `qwen/qwen3.8-27b` was checked with one JSON-mode call.
+- **Which model answered:** a `ModelUsageTracker` port (domain) is implemented with context variables (infrastructure). Each graph node runs inside `tracker.step(agent.name)`, and every endpoint returns `model_calls`: agent, requested model, answering model, `used_fallback`, `cached`. The UI shows "answered by fallback model" on that agent.
+- **Cache:** keys are unchanged, so cached primary answers (the demos) are still hits. A fallback answer is cached under the fallback model, so it is never replayed as the primary model's answer.
+- **Tests:** `test_model_fallback.py` (12) uses a fake Groq SDK that answers 429 for the first model.
 
 ---
 
@@ -129,7 +137,7 @@ Details and interpretation are in the README (section 6). Generated tables are i
 |---|---|---|
 | 1 | 20b | 80.4% |
 | 2 | 20b + strict prompt | 83.9% |
-| 3 (deployed) | 120b + strict prompt | **96.4%** (54/56; the 2 removed bullets are real fabrications) |
+| 3 (current) | 120b + strict prompt | **96.4%** (54/56; the 2 removed bullets are real fabrications) |
 
 **Adversarial verifier test:** 24/24 planted fabrications caught (skill, metric, employer, certification; 6 each); 24/24 verbatim controls supported. The fabrications are blatant, so this measures recall on obvious inventions, not on subtle exaggeration.
 
@@ -157,7 +165,7 @@ Details and interpretation are in the README (section 6). Generated tables are i
   - One run failed with an error that was not captured and did not reproduce.
   - The demo relies on the cache for a stable presentation.
 
-## 9. Tests (135)
+## 9. Tests (148)
 
 | File | Tests | Covers |
 |---|---|---|
@@ -171,7 +179,8 @@ Details and interpretation are in the README (section 6). Generated tables are i
 | test_chunkers.py | 18 | section/paragraph/hierarchical chunking, caps and merges |
 | test_entities.py | 16 | entity invariants, model aliases |
 | test_fts5.py | 1 | FTS5 available |
-| test_cors.py | 5 | allowed origins from ALLOWED_ORIGINS, unknown origin rejected, Retry-After exposed |
+| test_cors.py | 6 | allowed origins from ALLOWED_ORIGINS, unknown origin rejected, Retry-After exposed |
+| test_model_fallback.py | 12 | fallback chain, 429 on the first model answered by the next, all limited → 503 error, long `retry-after` falls back at once, primary cache hit unchanged, per-agent `model_calls` through the graph and the API |
 
 ## 10. Deviations from the specification
 
@@ -184,5 +193,7 @@ Details and interpretation are in the README (section 6). Generated tables are i
 - **Evaluation:** 6 synthetic CVs, a weak label, no human judgments.
 - **Query:** it depends on the order of extracted skills, and LLM output is not fully deterministic, so cold-cache results can differ between runs.
 - **Verifier:** checks bullets but not the tailoring summary line. Its false-alarm rate on real tailoring is unmeasured.
+- **Verifier misses subtle inflation:** on a CV pasted into the UI during testing (not an evaluation fixture), it marked these rewrites `supported`, citing the original line: "12 REST endpoints" → "12 production-grade REST APIs"; "CI pipeline … for automatic builds" → "automate builds and deployments"; "Wrote JUnit tests …" → "… reinforcing reliability and test-driven development". The adversarial test (24/24) only covers blatant inventions.
+- **Data snapshot:** the postings are a 2023–2024 LinkedIn snapshot, not live jobs.
 - **Data:** duplicate reposts appear in the dataset.
 - **Tech subset:** about 18% of postings are not software/IT jobs (audited 82%). The "engineer + ENG skill tag" rule is the main leak; tightening it is future work.

@@ -104,7 +104,6 @@ def test_429_on_first_model_is_answered_by_next_model(tmp_path) -> None:
     assert [(c.requested_model, c.answered_model, c.used_fallback, c.cached) for c in calls] == [
         (PRIMARY, FAST, True, False)
     ]
-    assert client.fallback_count == 1
 
 
 def test_walks_the_whole_chain_until_a_model_answers(tmp_path) -> None:

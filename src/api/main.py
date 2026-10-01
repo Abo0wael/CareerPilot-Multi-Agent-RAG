@@ -1,14 +1,13 @@
 """FastAPI backend for CareerPilot.
 
 Endpoints:
-- GET  /health    liveness (no index access; cheap after a cold start)
-- GET  /health/index  index diagnostics
+- GET  /health    index diagnostics
 - POST /profile   CV file or text -> CandidateProfile            (graph: profile)
 - POST /match     profile + preferences -> ranked JobMatch list  (graph: matcher)
 - POST /gap       profile + job_id -> GapReport                   (graph: gap)
 - POST /tailor    profile + job_id -> verified TailoredCV         (graph: tailor -> verifier)
 - POST /pipeline  CV -> profile, matches, gap + tailored CV for the top match (full graph)
-- POST /ingest    rebuild the index (requires X-Admin-Token; not served when APP_ENV=production)
+- POST /ingest    rebuild the index (requires X-Admin-Token)
 
 Every reasoning endpoint runs the LangGraph workflow and reports, in
 ``model_calls``, which Groq model answered each agent (a fallback model answers
@@ -22,7 +21,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
-from fastapi import APIRouter, Depends, FastAPI, File, Form, HTTPException, UploadFile, status
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.agents.workflow import CareerPilotWorkflow
@@ -39,7 +38,6 @@ from src.api.schemas import (
     CandidateProfileSchema,
     GapResponse,
     HealthResponse,
-    IndexStatsResponse,
     IngestResponse,
     JobTargetRequest,
     MatchRequest,
@@ -51,7 +49,7 @@ from src.api.schemas import (
 )
 from src.application.ingest_jobs import IngestJobsUseCase
 from src.domain.interfaces import IndexStatsReader, ModelUsageTracker
-from src.infrastructure.config import ServerSettings
+from src.infrastructure.config import CorsSettings
 
 logger = logging.getLogger(__name__)
 
@@ -70,10 +68,9 @@ app = FastAPI(
     version="1.1.0",
     lifespan=lifespan,
 )
-server_settings = ServerSettings()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=server_settings.origins,  # ALLOWED_ORIGINS (the web UI)
+    allow_origins=CorsSettings().origins,  # ALLOWED_ORIGINS in .env (the web UI)
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "X-Admin-Token"],
     expose_headers=["Retry-After"],  # lets the browser read the rate-limit wait
@@ -94,16 +91,11 @@ async def _read_cv(file: Optional[UploadFile], raw_text: Optional[str]) -> dict:
 
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
-def health_check() -> HealthResponse:
-    """Liveness probe: answers as soon as the server is up, without opening the index."""
-    return HealthResponse(status="ok")
-
-
-@app.get("/health/index", response_model=IndexStatsResponse, tags=["System"])
-def index_stats(stats_reader: IndexStatsReader = Depends(get_index_stats)) -> IndexStatsResponse:
+def health_check(stats_reader: IndexStatsReader = Depends(get_index_stats)) -> HealthResponse:
     """Index diagnostics: job/chunk counts and FTS5 availability."""
     stats = stats_reader.get_stats()
-    return IndexStatsResponse(
+    return HealthResponse(
+        status="ok",
         fts5_available=stats.fts5_available,
         total_jobs=stats.total_jobs,
         total_chunks=stats.total_chunks,
@@ -189,12 +181,10 @@ async def run_pipeline(
     )
 
 
-admin_router = APIRouter(tags=["Admin"])
-
-
-@admin_router.post(
+@app.post(
     "/ingest",
     response_model=IngestResponse,
+    tags=["Admin"],
     dependencies=[Depends(require_admin_token)],
 )
 def rebuild_index(use_case: IngestJobsUseCase = Depends(get_ingest_jobs_use_case)) -> IngestResponse:
@@ -205,8 +195,3 @@ def rebuild_index(use_case: IngestJobsUseCase = Depends(get_ingest_jobs_use_case
         jobs_ingested=result.jobs_ingested,
         chunks_indexed=result.chunks_indexed,
     )
-
-
-# A public deployment serves a pre-built index, so rebuilding it is not exposed there.
-if not server_settings.is_production:
-    app.include_router(admin_router)

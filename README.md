@@ -7,7 +7,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-agents-1C3C3C)
 ![Groq](https://img.shields.io/badge/LLM-Groq-F55036)
-![Tests](https://img.shields.io/badge/tests-135%20passing-2EA44F)
+![Tests](https://img.shields.io/badge/tests-148%20passing-2EA44F)
 
 ![CareerPilot landing page](docs/screenshots/landing-light.png)
 
@@ -42,11 +42,11 @@ Recruiters have AI tools that screen thousands of CVs in seconds. Candidates hav
 - **Verified tailoring:** each bullet is marked `supported` or `unverified`; unsupported claims are removed and listed with the reason.
 - **A real multi-agent graph:** every reasoning endpoint runs a LangGraph workflow routed by request type.
 - **Web UI (Next.js):** drag-and-drop CV, match cards, side-by-side gap and tailoring views, a live agent timeline driven by real request completions, light/dark mode, keyboard and screen-reader support.
-- **Rate-limit aware:** Groq's `retry-after` is honoured; a 503 in the UI shows a countdown.
+- **Model fallback on rate limits:** Groq's `retry-after` is honoured. If a model is still rate-limited after the retries, the same request goes to the next model in a configurable list, and the UI labels that agent "answered by fallback model".
 - **Two pre-cached demos:**
   - Demo 1: a backend CV and its top match.
   - Demo 2: an entry-level frontend CV and a React job. In the recorded evaluation run, the tailor rewrote a Vue.js project as React and the Verifier removed it; the UI replays that cached result, and nothing is scripted.
-- **Honest evaluation:** retrieval ablation, faithfulness, an adversarial Verifier test and token costs, all reproducible from scripts. Negative results are included.
+- **Evaluation:** retrieval ablation, faithfulness, an adversarial Verifier test and token costs, all reproducible from scripts. Negative results are reported too.
 
 ## Architecture
 
@@ -134,7 +134,7 @@ A step-by-step code walkthrough of `/pipeline` (in Egyptian Arabic) is in [`docs
 |---|---|---|
 | Full postings | 10,506 | — |
 | Requirement sections | 8,708 | 17.1% (31.2% on postings with headers) |
-| First 600 characters (deployed) | 2,078 | 80.2% |
+| First 600 characters (current reranker) | 2,078 | 80.2% |
 
 Chunking did not improve precision (below). Its measured value is fewer tokens and keeping marketing text out of the gap and tailoring prompts.
 
@@ -169,7 +169,7 @@ Chunking did not improve precision (below). Its measured value is fewer tokens a
 |---|---|---|---|
 | 1 | gpt-oss-20b | original | 45/56 (80.4%) |
 | 2 | gpt-oss-20b | strict: never copy tools from the job posting | 47/56 (83.9%) |
-| 3 (deployed) | gpt-oss-120b | strict | **54/56 (96.4%)** |
+| 3 (current) | gpt-oss-120b | strict | **54/56 (96.4%)** |
 
 - **Why tailoring runs on the larger model:** the fast model copied job keywords into bullets (Tableau → "Power BI"), and the Verifier removed them.
 - **Adversarial test** (since this is an LLM judging an LLM): 24 planted fabrications (fake skill, metric, employer, certification) were **all caught**, and 24/24 real CV bullets were kept.
@@ -182,11 +182,11 @@ Chunking did not improve precision (below). Its measured value is fewer tokens a
 | Area | Tools |
 |---|---|
 | Backend | Python 3.11, FastAPI, Pydantic, LangGraph, tenacity |
-| LLM | Groq API only: `openai/gpt-oss-20b` (profile, expansion, rerank), `openai/gpt-oss-120b` (gap, tailor, verifier) |
+| LLM | Groq API only: `openai/gpt-oss-20b` (profile, expansion, rerank), `openai/gpt-oss-120b` (gap, tailor, verifier); fallback `qwen/qwen3.8-27b` |
 | Retrieval | SQLite FTS5 (BM25), no embeddings, no vector DB |
 | Data | pandas, pypdf, Kaggle LinkedIn job postings |
 | Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS, lucide-react, framer-motion |
-| Quality | pytest (135 tests), ESLint, architecture test for the dependency rule |
+| Quality | pytest (148 tests), ESLint, architecture test for the dependency rule |
 
 ## Project structure
 
@@ -198,18 +198,21 @@ src/
   infrastructure/  SQLite FTS5, Groq client + port implementations, prompts, chunkers, parser, loader
   api/             FastAPI endpoints, schemas, error handlers, dependency wiring
 frontend/          Next.js web UI
-scripts/           build_index, evaluate, warm_demo_cache, analysis/
+scripts/           build_index, evaluate, warm_demo_cache, smoke_test_api, metering, eda_chunking,
+                   analysis/ (tech-subset audit sample, chunking token savings)
 tests/             backend tests + synthetic CV fixtures
 outputs/evaluation/  measured results
 docs/              walkthrough (Arabic), screenshots
 ```
 
-## Quickstart
+## Quickstart (local)
 
-### Backend
+Everything runs on your machine: the API on `127.0.0.1:8000`, the web UI on `localhost:3000`. Only the Groq API is called over the network.
+
+### 1. Backend set-up (once)
 
 ```bash
-git clone <repo-url> careerpilot && cd careerpilot
+git clone https://github.com/Abo0wael/CareerPilot-Multi-Agent-RAG.git careerpilot && cd careerpilot
 conda create -n careerpilot python=3.11 -y && conda activate careerpilot
 pip install -r requirements.txt
 
@@ -220,65 +223,95 @@ copy .env.example .env      # macOS/Linux: cp .env.example .env
 kaggle datasets download -d arshkon/linkedin-job-postings -p data --unzip
 
 python scripts/build_index.py        # about 1 minute, zero LLM calls
-python -m pytest                     # 151 tests, never call Groq
-python scripts/warm_demo_cache.py    # pre-cache both demo scenarios (0 Groq calls if already cached)
-uvicorn src.api.main:app --host 127.0.0.1 --port 8000   # docs at /docs
+python -m pytest                     # 148 tests, never call Groq
+python scripts/warm_demo_cache.py    # pre-cache both demo scenarios
 ```
 
-### Frontend
+`warm_demo_cache.py` runs each demo twice; the second pass must make 0 Groq calls, or the script exits with an error.
+
+### 2. Frontend set-up (once)
 
 ```bash
 cd frontend
 npm install
 copy .env.example .env.local        # NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
-npm run dev                          # http://localhost:3000
+npm run build                        # production build
 ```
 
-The API only accepts browser requests from `ALLOWED_ORIGINS` (default `http://localhost:3000,http://127.0.0.1:3000`). Deployment (API on a Hugging Face Space, index in a private HF dataset, UI on Vercel) is described step by step in [`docs/DEPLOY.md`](docs/DEPLOY.md).
+`NEXT_PUBLIC_API_URL` is read at build time and always wins; without it the UI calls port 8000 on the host that serves the page.
+
+### 3. Run
+
+```bash
+# terminal 1 (project root)
+uvicorn src.api.main:app --host 127.0.0.1 --port 8000     # API docs at http://127.0.0.1:8000/docs
+
+# terminal 2
+cd frontend
+npm start                                                 # http://localhost:3000
+```
+
+Open http://localhost:3000/flight and choose **Demo 1** or **Demo 2**. Both are served from the LLM cache with zero Groq calls. To check the demos without a browser:
+
+```bash
+python scripts/smoke_test_api.py --base-url http://127.0.0.1:8000 --origin http://localhost:3000
+```
+
+It sends the same requests as the UI and prints, per step, the time and which model answered (and whether it came from the cache).
+
+The API only accepts browser requests from `ALLOWED_ORIGINS` (default `http://localhost:3000,http://127.0.0.1:3000`).
 
 ## API reference
 
 | Method | Endpoint | Purpose | Errors |
 |---|---|---|---|
-| GET | `/health` | Liveness only (no index access; cheap after a cold start) | |
-| GET | `/health/index` | Job/chunk counts, FTS5 availability | 503 |
+| GET | `/health` | Job/chunk counts, FTS5 availability | 503 |
 | POST | `/profile` | CV file (`.pdf`/`.txt`) or `raw_text` → structured profile | 400, 502, 503 |
 | POST | `/match` | Profile + preferences → top-k jobs with reasons | 502, 503 |
 | POST | `/gap` | Profile + `job_id` → matched (with evidence) and missing requirements | 404, 502, 503 |
 | POST | `/tailor` | Profile + `job_id` → verified bullets and `removed_bullets` | 404, 502, 503 |
 | POST | `/pipeline` | CV → profile, matches, gap and verified tailoring for the top match | 400, 502, 503 |
-| POST | `/ingest` | Rebuild the index (header `X-Admin-Token`); not served when `APP_ENV=production` | 401, 403 |
+| POST | `/ingest` | Rebuild the index (header `X-Admin-Token`; disabled when `ADMIN_TOKEN` is empty) | 401, 403 |
 
-Every reasoning response includes `model_calls`: which Groq model answered each agent, and whether it came from the cache. If a model is still rate-limited after the retries, the client sends the same request to the next model in `GROQ_FALLBACK_MODELS` (default `gpt-oss-120b → gpt-oss-20b → qwen/qwen3.8-27b`, the chat models with JSON mode available on the account). The response then shows `used_fallback: true`, and the UI labels that agent "answered by fallback model". Fallback answers are cached under the fallback model, so cache hits for the primary model are unchanged.
+**Model fallback.** Every reasoning response includes `model_calls`: for each LLM request, the agent, the requested model, the model that answered, and whether the answer came from the cache. The Groq client retries a 429 as Groq's `retry-after` asks. If the model is still rate-limited after the retries, or asks for a wait longer than 60 s (for example a daily limit), the same request goes to the next model in `GROQ_FALLBACK_MODELS`. The default list is `gpt-oss-120b → gpt-oss-20b → qwen/qwen3.8-27b`, the three Groq chat models with JSON mode available on the project's account. The response then shows `used_fallback: true`. Fallback answers are cached under the fallback model's name, so cache hits for the primary model, including the demos, are unchanged.
 
 `503` = every model in the fallback list is rate-limited (with `Retry-After`); `502` = Groq error or unreadable model output.
 
 ## Testing
 
 ```bash
-python -m pytest            # backend: 151 tests
+python -m pytest            # backend: 148 tests
 cd frontend && npm run lint && npm run build
 ```
 
 - **`test_architecture.py`:** fails if `domain` imports another layer or a framework, if `application` imports `agents`/`infrastructure`/`api`, or if an inner layer imports an outer one.
 - **`test_graph.py`:** checks exactly which agents run for each request type (e.g. `gap` never runs the tailor).
 - **`test_api_endpoints.py`:** runs the real graph with fake ports and checks that a Groq 429 inside an agent reaches the client as 503.
-- **`test_model_fallback.py`:** a fake Groq SDK answers 429 for the first model. It checks that the next model answers, that the API reports it per agent, and that the demo cache still hits for the primary model.
+- **`test_model_fallback.py`:** a fake Groq SDK answers 429 for the first model. It checks that the next model answers, that `model_calls` reports it per agent, that a long `retry-after` falls back at once, and that a cached primary answer is still served.
 - **Also covered:** strict verdict parsing, reranker ordering, CORS, and ingest authentication.
-- **Fakes, not Groq:** all tests use fakes (`tests/fakes.py`).
+- **Fakes, not Groq:** all tests use fakes (`tests/fakes.py`) or a mocked Groq SDK.
 
 ## Limitations and future work
 
-- **Tech subset:** 82% measured precision; the "engineer + ENG skill tag" rule admits plant and process engineering jobs and should be tightened.
+- **Data is a snapshot:** the postings are a 2023–2024 LinkedIn snapshot from Kaggle, not live jobs. Matches may no longer be open, and newer skills are under-represented.
+- **Tech subset:** 82% measured precision (41 of 50 audited postings); the "engineer + ENG skill tag" rule admits plant and process engineering jobs and should be tightened.
+- **The Verifier misses subtle inflation.** It catches obvious inventions (24/24 planted fake skills, metrics, employers and certifications). Each rewrite below kept the original fact but added a claim the CV does not make, and the Verifier marked all three `supported`, citing the original line. They come from a CV pasted into the UI during testing, not from the evaluation fixtures:
+
+  | Original CV | Tailored bullet (marked supported) | Added claim |
+  |---|---|---|
+  | Built and maintained 12 REST endpoints in Spring Boot… | …12 production-grade REST APIs… | "production-grade" |
+  | Set up a CI pipeline with GitHub Actions and Docker for automatic builds | …to automate builds and deployments… | deployments |
+  | Wrote JUnit tests that raised code coverage from 40% to 75% | …reinforcing reliability and test-driven development | test-driven development |
+
+- **Verifier scope:** it checks bullets but not the one-line tailoring summary; its false-alarm rate on real tailoring is unmeasured.
+- **Evaluation size:** 6 synthetic CVs and a weak title-based label; no comparison is statistically significant (sign-test p ≥ 0.375). More profiles and human relevance judgments are needed.
 - **Reranker input:** it sees the first 600 characters of each posting, often company marketing. Using the requirement sections would cost the same tokens with more relevant text.
 - **Query building:** it uses only the first five extracted skills; building it from the target role and all skills should help profiles like the data scientist.
-- **Evaluation:** 6 synthetic CVs and a weak title-based label are not enough for significance. More profiles and human relevance judgments are needed.
-- **Verifier:** it checks bullets but not the one-line tailoring summary; its false-alarm rate on real tailoring is unmeasured.
 - **Non-determinism:** LLM output varies between runs, even at temperature 0.
   - Demo 2 is cached.
   - 3 cold reruns of that scenario all removed the Vue.js → React claim, but removed 1, 3 and 1 bullets respectively, with different wording.
   - A fourth cold run failed with an error that was not captured and did not reproduce.
-- **Deployment:** the UI is Vercel-ready; the API needs a host with persistent disk (index + LLM cache). Not deployed yet.
+- **Rate limits:** the free Groq tier allows 8,000 tokens per minute per model. A fresh (uncached) CV usually fits; repeated fresh runs within a minute can hit the limit, which the fallback models absorb until all three are limited.
 
 ## Author
 

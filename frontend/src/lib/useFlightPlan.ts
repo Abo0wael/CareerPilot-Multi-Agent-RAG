@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import type { AgentId } from "./agents";
 import {
   api,
-  waitUntilAwake,
   type CandidateProfile,
   type GapReport,
   type JobMatch,
@@ -15,8 +14,6 @@ import {
 export type AgentStatus = "idle" | "running" | "done" | "error" | "cancelled";
 export type AgentRun = { status: AgentStatus; ms: number | null };
 export type CvInput = { file: File } | { text: string };
-/** "waking": the API did not answer /health yet (a sleeping Space is starting). */
-export type ServerStatus = "checking" | "waking" | "ready";
 export type AgentModels = Partial<Record<AgentId, ModelCall[]>>;
 
 // Agent names as the backend reports them in model_calls.
@@ -71,28 +68,10 @@ export function useFlightPlan() {
   const [tailored, setTailored] = useState<TailoredCV | null>(null);
   const [error, setError] = useState<FlightError | null>(null);
   const [busy, setBusy] = useState(false);
-  const [server, setServer] = useState<ServerStatus>("checking");
   const [models, setModels] = useState<AgentModels>({});
   const controller = useRef<AbortController | null>(null);
-  const awake = useRef<Promise<void> | null>(null);
 
-  /** Waits for /health once per page; later runs reuse the answer. */
-  const ensureAwake = (signal?: AbortSignal) => {
-    awake.current ??= waitUntilAwake(() => setServer("waking"), signal).then(
-      () => setServer("ready"),
-      (err) => {
-        awake.current = null;
-        throw err;
-      },
-    );
-    return awake.current;
-  };
-
-  useEffect(() => {
-    // Start waking a sleeping server as soon as the page opens.
-    ensureAwake().catch(() => undefined);
-    return () => controller.current?.abort();
-  }, []);
+  useEffect(() => () => controller.current?.abort(), []);
 
   const mark = (ids: AgentId[], run: AgentRun) => {
     setAgents((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, run])) }));
@@ -180,7 +159,6 @@ export function useFlightPlan() {
       setSelectedJobId(null);
       let failure: unknown;
       try {
-        await ensureAwake(signal);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { model_calls, ...p } = await step(["profile"], () => api.buildProfile(input, signal));
         if (signal.aborted) return;
@@ -198,7 +176,6 @@ export function useFlightPlan() {
       const signal = begin();
       let failure: unknown;
       try {
-        await ensureAwake(signal);
         await matchWith(profile, prefs, signal);
       } catch (err) {
         failure = err;
@@ -212,7 +189,6 @@ export function useFlightPlan() {
       const signal = begin();
       let failure: unknown;
       try {
-        await ensureAwake(signal);
         await analyzeWith(profile, jobId, signal);
       } catch (err) {
         failure = err;
@@ -228,5 +204,5 @@ export function useFlightPlan() {
     setBusy(false);
   };
 
-  return { agents, models, server, profile, matches, selectedJobId, gap, tailored, error, busy, start, findMatches, analyzeJob, cancel, reportError };
+  return { agents, models, profile, matches, selectedJobId, gap, tailored, error, busy, start, findMatches, analyzeJob, cancel, reportError };
 }

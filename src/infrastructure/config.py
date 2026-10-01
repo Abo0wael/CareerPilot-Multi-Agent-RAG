@@ -101,15 +101,6 @@ class Settings(BaseSettings):
         default=["ENG", "IT"],
         description="Skill abbreviations from the dataset that indicate tech roles.",
     )
-    tech_industry_ids: list[int] = Field(
-        default=[
-            3, 4, 5, 6, 7, 8, 84, 109, 115, 118,
-            1285, 1594, 2458,
-            3101, 3102, 3103, 3105, 3106, 3124,
-            3127, 3130, 3132, 3134, 3218, 3231, 3234, 3235,
-        ],
-        description="Industry IDs from the dataset that indicate tech companies.",
-    )
     tech_title_exclusions: list[str] = Field(
         default=[
             # Non-software engineering disciplines
@@ -148,12 +139,6 @@ class Settings(BaseSettings):
             "Executive": ["executive", "president", "managing director"],
         },
         description="Title keywords mapped to experience levels for rule-based fallback.",
-    )
-
-    # -- Search scope ────────────────────────────────────────────────
-    search_excluded_sections: list[str] = Field(
-        default=["benefits", "about"],
-        description="Chunk sections excluded from BM25 search (Benefits/About contain no requirements).",
     )
 
     paragraph_chunk_max_length: int = Field(
@@ -227,8 +212,8 @@ def get_settings() -> Settings:
     return Settings()
 
 
-class ServerSettings(BaseSettings):
-    """How the API server is exposed: CORS origins and environment (read at app start-up).
+class CorsSettings(BaseSettings):
+    """Browser origins allowed to call the API (read at app start-up).
 
     Kept separate from ``Settings`` so building the FastAPI app does not
     require ``GROQ_API_KEY`` (tests and tooling import the app without it).
@@ -238,20 +223,12 @@ class ServerSettings(BaseSettings):
         default="http://localhost:3000,http://127.0.0.1:3000",
         description="Comma-separated origins allowed by CORS (the web UI).",
     )
-    app_env: str = Field(
-        default="development",
-        description="'production' removes admin endpoints (POST /ingest) from the API.",
-    )
 
     model_config = {
         "env_file": str(_PROJECT_ROOT / ".env"),
         "env_file_encoding": "utf-8",
         "extra": "ignore",
     }
-
-    @property
-    def is_production(self) -> bool:
-        return self.app_env.strip().lower() == "production"
 
     @property
     def origins(self) -> list[str]:

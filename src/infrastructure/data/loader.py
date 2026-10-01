@@ -41,7 +41,6 @@ class KaggleDataLoader(JobSource):
         self._data_dir = settings.data_raw_dir
         self._title_keywords = [kw.lower() for kw in settings.tech_title_keywords]
         self._skill_abbreviations = set(settings.tech_skill_abbreviations)
-        self._tech_industry_ids = set(settings.tech_industry_ids)
         self._title_exclusions = [ex.lower() for ex in settings.tech_title_exclusions]
         self._exp_level_patterns = settings.experience_level_title_patterns
 
@@ -50,7 +49,7 @@ class KaggleDataLoader(JobSource):
     def load_postings(self) -> list[JobPosting]:
         """Run the full load -> clean -> tech filter -> enrich pipeline (``JobSource``)."""
         df = self.clean_postings(self.load_postings_df())
-        tech_df = self.filter_tech_subset(df, self.load_job_skills(), self.load_job_industries())
+        tech_df = self.filter_tech_subset(df, self.load_job_skills())
         tech_df = self.enrich_experience_level(tech_df)
         logger.info("Tech subset: %d postings.", len(tech_df))
         return self.to_job_postings(tech_df)
@@ -70,21 +69,6 @@ class KaggleDataLoader(JobSource):
     def load_job_skills(self) -> pd.DataFrame:
         """Load the job_skills mapping (job_id -> skill_abr)."""
         path = self._data_dir / "jobs" / "job_skills.csv"
-        return pd.read_csv(path)
-
-    def load_job_industries(self) -> pd.DataFrame:
-        """Load the job_industries mapping (job_id -> industry_id)."""
-        path = self._data_dir / "jobs" / "job_industries.csv"
-        return pd.read_csv(path)
-
-    def load_skills_mapping(self) -> pd.DataFrame:
-        """Load skill abbreviation -> name mapping."""
-        path = self._data_dir / "mappings" / "skills.csv"
-        return pd.read_csv(path)
-
-    def load_industries_mapping(self) -> pd.DataFrame:
-        """Load industry_id -> name mapping."""
-        path = self._data_dir / "mappings" / "industries.csv"
         return pd.read_csv(path)
 
     def clean_postings(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -119,7 +103,6 @@ class KaggleDataLoader(JobSource):
         self,
         df: pd.DataFrame,
         job_skills: Optional[pd.DataFrame] = None,
-        job_industries: Optional[pd.DataFrame] = None,
     ) -> pd.DataFrame:
         """Filter to a tech-relevant subset using a refined, high-precision rule:
 

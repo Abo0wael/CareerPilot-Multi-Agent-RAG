@@ -208,13 +208,16 @@ HTTP  ->  api/main.py  ->  agents/workflow.py  ->  LangGraph (agents/graph.py)
 
 1. `_cache_key`: بتعمل SHA-256 للـ (model, prompt, system prompt, temperature, max_tokens, mode, reasoning_effort).
 2. `_get_from_cache`: لو الرد موجود في `.llm_cache/` بترجّعه على طول، **من غير أي call**. عشان كده الـ demo بعد `warm_demo_cache.py` بيعمل صفر calls.
-3. لو مش موجود، بتنادي `_complete(...)`:
+3. لو مش موجود، بتنادي `_complete_with_fallback(...)`، ودي بتجرب `_complete(...)` على كل موديل في `fallback_chain` بالترتيب:
    - بتطلب JSON mode، و`reasoning_effort="low"` لموديلات gpt-oss، عشان تقلل الـ tokens المخفية.
-   - `@retry` (tenacity) على 429 و connection errors. `_wait_before_retry` بتستنى **قد ما Groq قال في `retry-after`**.
-   - بعد ما المحاولات تخلص: 429 تبقى `LLMRateLimitError`، والـ connection أو API error تبقى `LLMError`.
-   - `_record_usage` بتعدّ الـ tokens.
-4. `_parse_json_object` بتقرا الـ JSON. لو فشلت، فيه محاولة إصلاح واحدة، ولو فشلت كمان بترمي `LLMResponseParseError`.
-5. `_write_to_cache` بتحفظ الرد.
+   - `@retry` (tenacity) على 429 و connection errors. `_wait_before_retry` بتستنى **قد ما Groq قال في `retry-after`**. ولو Groq طلب يستنى أكتر من 60 ثانية (زي الـ limit اليومي)، `_stop_retrying` بتوقف على طول.
+   - لو الموديل لسه عامل 429 بعد المحاولات، نفس الطلب بيروح للموديل اللي بعده: `gpt-oss-120b` ← `gpt-oss-20b` ← `qwen/qwen3.8-27b` (من `GROQ_FALLBACK_MODELS`).
+   - لو كل الموديلات عاملة 429 تبقى `LLMRateLimitError`، والـ connection أو API error تبقى `LLMError`.
+   - `_record_usage` بتعدّ الـ tokens، و`_record_model` بتسجل مين اللي رد فعلاً (للـ `model_calls`).
+4. `_parse_json_object` بتقرا الـ JSON. لو فشلت، فيه محاولة إصلاح واحدة على نفس الموديل اللي رد، ولو فشلت كمان بترمي `LLMResponseParseError`.
+5. `_write_to_cache` بتحفظ الرد **باسم الموديل اللي رد**. يعني رد الـ fallback عمره ما بيترجع على إنه رد الموديل الأساسي، والـ cache بتاع الديمو زي ما هو.
+
+**مين رد على كل agent؟** `ContextModelUsageTracker` (في `llm/model_usage.py`) بيستخدم context variables، فكل request ليه list لوحده. الـ graph بيشغّل كل agent جوه `tracker.step(agent.name)`، والـ endpoint بيجمع الـ calls في `tracker.collect()` ويرجّعها في `model_calls`.
 
 ---
 
@@ -226,6 +229,7 @@ HTTP  ->  api/main.py  ->  agents/workflow.py  ->  LangGraph (agents/graph.py)
    - `MatchResponse.from_domain`، وفيها `MatchedJobItem` لكل وظيفة.
    - `GapResponse.from_domain`
    - `TailorResponse.from_domain`: `bullets` (فيها verdict لكل واحدة)، و`removed_bullets`، و`verification` (الأعداد: supported و unsupported و unverified).
+   - `model_calls`: لكل LLM request، الـ agent والموديل المطلوب والموديل اللي رد، وهل جه من الـ cache.
 3. FastAPI بيرجّع الـ JSON بـ 200.
 
 ## 11) ولو حصل خطأ في أي نقطة؟
@@ -234,7 +238,7 @@ HTTP  ->  api/main.py  ->  agents/workflow.py  ->  LangGraph (agents/graph.py)
 
 | الخطأ | الرد |
 |---|---|
-| `LLMRateLimitError` | **503** + `Retry-After: 30` |
+| `LLMRateLimitError` (كل موديلات الـ fallback عاملة 429) | **503** + `Retry-After: 30` |
 | `LLMError` / `LLMResponseParseError` | **502** |
 | `JobNotFoundError` | **404** |
 | `CVParsingError`، أخطاء الـ validation، `WorkflowStateError` | **400** |

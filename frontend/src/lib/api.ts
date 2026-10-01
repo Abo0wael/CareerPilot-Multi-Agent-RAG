@@ -2,9 +2,8 @@
 // Types mirror src/api/schemas.py.
 
 /**
- * The API base URL. NEXT_PUBLIC_API_URL (inlined at build time) always wins, so a
- * deployed UI (e.g. on Vercel) calls the deployed API. Without it, local development
- * assumes the API on port 8000 of the host serving the page (localhost or a LAN IP).
+ * The API base URL. NEXT_PUBLIC_API_URL (inlined at build time) always wins. Without it,
+ * the API is assumed on port 8000 of the host serving the page (localhost or a LAN IP).
  */
 export function getApiUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
@@ -117,10 +116,6 @@ export interface TailoredCV extends WithModelCalls {
 
 export type ProfileResponse = CandidateProfile & WithModelCalls;
 
-export interface Health {
-  status: string;
-}
-
 /** An HTTP error from the API, with the server's message and (for 503) the Retry-After wait. */
 export class ApiError extends Error {
   constructor(
@@ -180,8 +175,6 @@ function postJson<T>(path: string, body: unknown, signal?: AbortSignal): Promise
 }
 
 export const api = {
-  health: (signal?: AbortSignal) => request<Health>("/health", { signal }),
-
   /** Upload a CV file (.pdf / .txt), or send pasted text, and get the structured profile. */
   buildProfile: (input: { file: File } | { text: string }, signal?: AbortSignal) => {
     const form = new FormData();
@@ -200,46 +193,6 @@ export const api = {
   tailor: (profile: CandidateProfile, jobId: number, signal?: AbortSignal) =>
     postJson<TailoredCV>("/tailor", { profile, job_id: jobId }, signal),
 };
-
-const WAKE_PROBE_TIMEOUT_MS = 8_000;
-const WAKE_RETRY_EVERY_MS = 4_000;
-const WAKE_GIVE_UP_AFTER_MS = 5 * 60_000;
-
-const sleep = (ms: number, signal?: AbortSignal) =>
-  new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(resolve, ms);
-    signal?.addEventListener("abort", () => {
-      clearTimeout(timer);
-      reject(new DOMException("Aborted", "AbortError"));
-    });
-  });
-
-/**
- * Resolves once GET /health answers. A free Hugging Face Space sleeps when idle; while it
- * starts, requests fail or return the proxy's own page, so `onWaking` is called once and the
- * probe is repeated instead of reporting an error.
- */
-export async function waitUntilAwake(onWaking: () => void, signal?: AbortSignal): Promise<void> {
-  const deadline = Date.now() + WAKE_GIVE_UP_AFTER_MS;
-  let warned = false;
-  for (;;) {
-    const probe = AbortSignal.any([AbortSignal.timeout(WAKE_PROBE_TIMEOUT_MS), ...(signal ? [signal] : [])]);
-    try {
-      const health = await api.health(probe);
-      if (health.status === "ok") return;
-    } catch (error) {
-      if (signal?.aborted) throw error;
-    }
-    if (Date.now() > deadline) {
-      throw new ApiError(0, `The CareerPilot API at ${getApiUrl()} did not wake up within 5 minutes.`, null);
-    }
-    if (!warned) {
-      warned = true;
-      onWaking();
-    }
-    await sleep(WAKE_RETRY_EVERY_MS, signal);
-  }
-}
 
 /** A short, user-facing explanation for an API error. */
 export function describeError(error: unknown): { title: string; message: string; retryAfterSeconds: number | null } {
