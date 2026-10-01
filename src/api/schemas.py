@@ -13,6 +13,7 @@ from src.domain.entities import (
     GapItem,
     GapReport,
     JobMatch,
+    ModelCall,
     ProjectEntry,
     TailoredBullet,
     TailoredCV,
@@ -85,6 +86,38 @@ class CandidateProfileSchema(BaseModel):
         )
 
 
+# ── Model usage ──────────────────────────────────────────────────────
+
+class ModelCallSchema(BaseModel):
+    """Which Groq model answered one LLM request of an agent."""
+
+    agent: str
+    requested_model: str
+    answered_model: str
+    used_fallback: bool = Field(..., description="True if the requested model was rate-limited and a fallback answered.")
+    cached: bool = Field(..., description="True if the answer came from the LLM disk cache.")
+
+    @classmethod
+    def from_domain(cls, call: ModelCall) -> ModelCallSchema:
+        return cls(
+            agent=call.agent,
+            requested_model=call.requested_model,
+            answered_model=call.answered_model,
+            used_fallback=call.used_fallback,
+            cached=call.cached,
+        )
+
+    @classmethod
+    def from_calls(cls, calls: list[ModelCall]) -> list[ModelCallSchema]:
+        return [cls.from_domain(c) for c in calls]
+
+
+class ProfileResponse(CandidateProfileSchema):
+    """The profile plus the models that produced it (extra fields are ignored when sent back)."""
+
+    model_calls: list[ModelCallSchema] = Field(default_factory=list)
+
+
 # ── Requests ─────────────────────────────────────────────────────────
 
 class MatchRequest(BaseModel):
@@ -103,7 +136,12 @@ class JobTargetRequest(BaseModel):
 # ── Responses ────────────────────────────────────────────────────────
 
 class HealthResponse(BaseModel):
+    """Liveness only: answers without touching the index (cheap after a cold start)."""
+
     status: str
+
+
+class IndexStatsResponse(BaseModel):
     fts5_available: bool
     total_jobs: int
     total_chunks: int
@@ -141,6 +179,7 @@ class MatchedJobItem(BaseModel):
 class MatchResponse(BaseModel):
     total_matches: int
     matches: list[MatchedJobItem]
+    model_calls: list[ModelCallSchema] = Field(default_factory=list)
 
     @classmethod
     def from_domain(cls, matches: list[JobMatch]) -> MatchResponse:
@@ -163,6 +202,7 @@ class GapResponse(BaseModel):
     matched_items: list[GapItemSchema]
     missing_items: list[GapItemSchema]
     summary: str
+    model_calls: list[ModelCallSchema] = Field(default_factory=list)
 
     @classmethod
     def from_domain(cls, report: GapReport) -> GapResponse:
@@ -207,6 +247,7 @@ class TailorResponse(BaseModel):
     bullets: list[TailoredBulletSchema]
     removed_bullets: list[TailoredBulletSchema]
     verification: Optional[VerificationSummarySchema] = None
+    model_calls: list[ModelCallSchema] = Field(default_factory=list)
 
     @classmethod
     def from_domain(cls, tailored: TailoredCV) -> TailorResponse:
@@ -234,6 +275,7 @@ class PipelineResponse(BaseModel):
     target_job_id: Optional[int] = None
     gap: Optional[GapResponse] = None
     tailored_cv: Optional[TailorResponse] = None
+    model_calls: list[ModelCallSchema] = Field(default_factory=list, description="Every LLM call of the run, per agent.")
 
 
 class IngestResponse(BaseModel):

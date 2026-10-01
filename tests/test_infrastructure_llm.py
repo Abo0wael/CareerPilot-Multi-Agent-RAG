@@ -90,7 +90,8 @@ class TestGroqClient:
 
     def _client_raising(self, tmp_path, error: Exception) -> tuple[GroqClient, MagicMock]:
         settings = Settings(
-            groq_api_key="fake", llm_cache_dir=tmp_path / "cache", llm_max_retries=2, llm_retry_min_wait=0, llm_retry_max_wait=0
+            groq_api_key="fake", llm_cache_dir=tmp_path / "cache", llm_max_retries=2, llm_retry_min_wait=0,
+            llm_retry_max_wait=0, groq_fallback_models="",  # one model: retries only (fallback: test_model_fallback.py)
         )
         mock_groq = MagicMock()
         mock_groq.chat.completions.create.side_effect = error

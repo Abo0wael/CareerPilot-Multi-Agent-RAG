@@ -220,7 +220,7 @@ copy .env.example .env      # macOS/Linux: cp .env.example .env
 kaggle datasets download -d arshkon/linkedin-job-postings -p data --unzip
 
 python scripts/build_index.py        # about 1 minute, zero LLM calls
-python -m pytest                     # 135 tests, never call Groq
+python -m pytest                     # 151 tests, never call Groq
 python scripts/warm_demo_cache.py    # pre-cache both demo scenarios (0 Groq calls if already cached)
 uvicorn src.api.main:app --host 127.0.0.1 --port 8000   # docs at /docs
 ```
@@ -234,32 +234,36 @@ copy .env.example .env.local        # NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 npm run dev                          # http://localhost:3000
 ```
 
-The API only accepts browser requests from `ALLOWED_ORIGINS` (default `http://localhost:3000,http://127.0.0.1:3000`). Deployment notes (UI on Vercel, API on a host such as Render) are in [`frontend/README.md`](frontend/README.md).
+The API only accepts browser requests from `ALLOWED_ORIGINS` (default `http://localhost:3000,http://127.0.0.1:3000`). Deployment (API on a Hugging Face Space, index in a private HF dataset, UI on Vercel) is described step by step in [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ## API reference
 
 | Method | Endpoint | Purpose | Errors |
 |---|---|---|---|
-| GET | `/health` | Job/chunk counts, FTS5 availability | |
+| GET | `/health` | Liveness only (no index access; cheap after a cold start) | |
+| GET | `/health/index` | Job/chunk counts, FTS5 availability | 503 |
 | POST | `/profile` | CV file (`.pdf`/`.txt`) or `raw_text` → structured profile | 400, 502, 503 |
 | POST | `/match` | Profile + preferences → top-k jobs with reasons | 502, 503 |
 | POST | `/gap` | Profile + `job_id` → matched (with evidence) and missing requirements | 404, 502, 503 |
 | POST | `/tailor` | Profile + `job_id` → verified bullets and `removed_bullets` | 404, 502, 503 |
 | POST | `/pipeline` | CV → profile, matches, gap and verified tailoring for the top match | 400, 502, 503 |
-| POST | `/ingest` | Rebuild the index (header `X-Admin-Token`) | 401, 403 |
+| POST | `/ingest` | Rebuild the index (header `X-Admin-Token`); not served when `APP_ENV=production` | 401, 403 |
 
-`503` = Groq rate limit after retries (with `Retry-After`); `502` = Groq error or unreadable model output.
+Every reasoning response includes `model_calls`: which Groq model answered each agent, and whether it came from the cache. If a model is still rate-limited after the retries, the client sends the same request to the next model in `GROQ_FALLBACK_MODELS` (default `gpt-oss-120b → gpt-oss-20b → qwen/qwen3.8-27b`, the chat models with JSON mode available on the account). The response then shows `used_fallback: true`, and the UI labels that agent "answered by fallback model". Fallback answers are cached under the fallback model, so cache hits for the primary model are unchanged.
+
+`503` = every model in the fallback list is rate-limited (with `Retry-After`); `502` = Groq error or unreadable model output.
 
 ## Testing
 
 ```bash
-python -m pytest            # backend: 135 tests
+python -m pytest            # backend: 151 tests
 cd frontend && npm run lint && npm run build
 ```
 
 - **`test_architecture.py`:** fails if `domain` imports another layer or a framework, if `application` imports `agents`/`infrastructure`/`api`, or if an inner layer imports an outer one.
 - **`test_graph.py`:** checks exactly which agents run for each request type (e.g. `gap` never runs the tailor).
 - **`test_api_endpoints.py`:** runs the real graph with fake ports and checks that a Groq 429 inside an agent reaches the client as 503.
+- **`test_model_fallback.py`:** a fake Groq SDK answers 429 for the first model. It checks that the next model answers, that the API reports it per agent, and that the demo cache still hits for the primary model.
 - **Also covered:** strict verdict parsing, reranker ordering, CORS, and ingest authentication.
 - **Fakes, not Groq:** all tests use fakes (`tests/fakes.py`).
 

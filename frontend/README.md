@@ -35,19 +35,10 @@ src/lib/evaluation.ts     measured results read from src/data/*.json
 - **Tailor and Verifier:** they share `POST /tailor`, because the LangGraph graph always verifies after tailoring, so they finish together.
 - **Rate limits:** a `503` shows Groq's `Retry-After` as a countdown before retry is allowed.
 
-## Deploying later (not deployed yet)
+## Deployment
 
-**Frontend on Vercel:**
-1. Import the repo and set the **Root Directory** to `frontend`.
-2. Set `NEXT_PUBLIC_API_URL` to the public backend URL.
-3. Deploy.
+See [`../docs/DEPLOY.md`](../docs/DEPLOY.md). In short: the UI runs on Vercel with
+`NEXT_PUBLIC_API_URL` set to the Hugging Face Space URL. That variable always wins over
+the local fallback, which uses port 8000 on the page's host. Set it before you build.
 
-**The backend must be hosted elsewhere** (for example Render, Railway or Fly.io). It does not fit Vercel's serverless functions:
-- it needs a writable 174 MB SQLite index and a persistent LLM cache on disk;
-- requests can run 20–30 s;
-- it is a long-running FastAPI/uvicorn process.
-
-**On the backend host:**
-- set `GROQ_API_KEY`;
-- build the index (`python scripts/build_index.py`) or attach it on a disk;
-- set `ALLOWED_ORIGINS` to the Vercel domain (e.g. `https://careerpilot.vercel.app`) so the browser may call the API.
+The backend does not fit Vercel's serverless functions: it needs the 174 MB SQLite index on disk, its requests can take 20–30 s, and it is a long-running uvicorn process. That is why it runs in a Docker Space.

@@ -26,7 +26,7 @@ from src.application.ingest_jobs import IngestJobsUseCase
 from src.application.match_jobs import MatchJobsUseCase
 from src.application.tailor_cv import TailorCVUseCase
 from src.application.verify_tailored_cv import VerifyTailoredCVUseCase
-from src.domain.interfaces import IndexStatsReader, LLMClient
+from src.domain.interfaces import IndexStatsReader, LLMClient, ModelUsageTracker
 from src.infrastructure.chunking.chunkers import CompositeChunker
 from src.infrastructure.config import Settings, get_settings
 from src.infrastructure.data.loader import KaggleDataLoader
@@ -34,6 +34,7 @@ from src.infrastructure.llm.claim_verifier import GroqClaimVerifier
 from src.infrastructure.llm.client import GroqClient
 from src.infrastructure.llm.cv_tailor import GroqCVTailor
 from src.infrastructure.llm.gap_analyzer import GroqGapAnalyzer
+from src.infrastructure.llm.model_usage import ContextModelUsageTracker
 from src.infrastructure.llm.profile_extractor import GroqProfileExtractor
 from src.infrastructure.parsing.cv_parser import UniversalCVParser
 from src.infrastructure.retrieval.expander import GroqQueryExpander
@@ -65,12 +66,21 @@ def _job_repository(settings: Settings) -> SQLiteJobRepository:
     return _singleton("job_repo", lambda: SQLiteJobRepository(settings.index_path))
 
 
+def _usage_tracker() -> ContextModelUsageTracker:
+    return _singleton("usage_tracker", ContextModelUsageTracker)
+
+
 def _llm_client(settings: Settings) -> GroqClient:
-    return _singleton("llm_client", lambda: GroqClient(settings=settings))
+    return _singleton("llm_client", lambda: GroqClient(settings=settings, usage_tracker=_usage_tracker()))
 
 
-def build_workflow(settings: Settings, llm: LLMClient) -> CareerPilotWorkflow:
-    """Wire use cases, agents and the LangGraph graph (also used by scripts)."""
+def build_workflow(
+    settings: Settings, llm: LLMClient, usage_tracker: Optional[ModelUsageTracker] = None
+) -> CareerPilotWorkflow:
+    """Wire use cases, agents and the LangGraph graph (also used by scripts).
+
+    Pass the same *usage_tracker* the LLM client records into to tag calls per agent.
+    """
     job_repo = _job_repository(settings)
     fast = settings.groq_fast_model
     match_use_case = MatchJobsUseCase(
@@ -114,6 +124,7 @@ def build_workflow(settings: Settings, llm: LLMClient) -> CareerPilotWorkflow:
         gap_agent=GapAnalyzerAgent(gap_use_case),
         tailor_agent=TailorAgent(tailor_use_case),
         verifier_agent=VerifierAgent(verify_use_case),
+        usage_tracker=usage_tracker,
     )
     return CareerPilotWorkflow(graph)
 
@@ -122,7 +133,12 @@ def build_workflow(settings: Settings, llm: LLMClient) -> CareerPilotWorkflow:
 
 def get_workflow(settings: Settings = Depends(get_settings)) -> CareerPilotWorkflow:
     """Provide the multi-agent workflow (built once)."""
-    return _singleton("workflow", lambda: build_workflow(settings, _llm_client(settings)))
+    return _singleton("workflow", lambda: build_workflow(settings, _llm_client(settings), _usage_tracker()))
+
+
+def get_model_usage_tracker() -> ModelUsageTracker:
+    """Provide the tracker that reports which model answered each agent's LLM calls."""
+    return _usage_tracker()
 
 
 def get_index_stats(settings: Settings = Depends(get_settings)) -> IndexStatsReader:

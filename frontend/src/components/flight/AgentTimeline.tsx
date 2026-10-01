@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Check, Loader2, X } from "lucide-react";
 import { AGENTS, type AgentId } from "@/lib/agents";
-import type { AgentRun } from "@/lib/useFlightPlan";
+import type { AgentModels, AgentRun } from "@/lib/useFlightPlan";
 
 function StatusIcon({ status }: { status: AgentRun["status"] }) {
   if (status === "running") return <Loader2 size={13} className="animate-spin" aria-hidden />;
@@ -32,7 +32,7 @@ const STATUS_TEXT: Record<AgentRun["status"], string> = {
  * The flight plan: one waypoint per agent. A waypoint changes only when its API
  * request actually starts or returns; durations are the measured request times.
  */
-export function AgentTimeline({ agents }: { agents: Record<AgentId, AgentRun> }) {
+export function AgentTimeline({ agents, models = {} }: { agents: Record<AgentId, AgentRun>; models?: AgentModels }) {
   const running = AGENTS.filter((a) => agents[a.id].status === "running").map((a) => a.name);
   return (
     <section aria-label="Agent progress" className="rounded-lg border border-line bg-surface px-3 pb-3 pt-2.5 sm:px-5">
@@ -46,6 +46,7 @@ export function AgentTimeline({ agents }: { agents: Record<AgentId, AgentRun> })
         <div className="absolute left-[10%] right-[10%] top-[11px] border-t-2 border-dashed border-line" aria-hidden />
         {AGENTS.map((agent) => {
           const run = agents[agent.id];
+          const fallbacks = [...new Set((models[agent.id] ?? []).filter((c) => c.used_fallback).map((c) => c.answered_model))];
           return (
             <li key={agent.id} className="relative flex flex-col items-center text-center">
               <motion.span
@@ -61,6 +62,15 @@ export function AgentTimeline({ agents }: { agents: Record<AgentId, AgentRun> })
                 {STATUS_TEXT[run.status]}
                 {run.ms !== null && ` · ${(run.ms / 1000).toFixed(1)} s`}
               </span>
+              {fallbacks.length > 0 && (
+                <span
+                  className="mt-0.5 rounded border border-beacon-strong/50 bg-beacon-soft px-1 font-mono text-[10px] text-beacon"
+                  title={`The requested model was rate-limited; answered by ${fallbacks.join(", ")}`}
+                >
+                  answered by fallback model
+                  <span className="sr-only">: {fallbacks.join(", ")}</span>
+                </span>
+              )}
             </li>
           );
         })}

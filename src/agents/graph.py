@@ -15,10 +15,11 @@ Routers are pure functions of the state: they never modify it.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Optional, TypedDict
+from typing import Any, Callable, Optional, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
+from src.agents.base import BaseAgent
 from src.agents.gap_agent import GapAnalyzerAgent
 from src.agents.matcher_agent import MatcherAgent
 from src.agents.profile_agent import ProfileAgent
@@ -26,6 +27,7 @@ from src.agents.tailor_agent import TailorAgent
 from src.agents.verifier_agent import VerifierAgent
 from src.domain.entities import CandidateProfile, GapReport, JobMatch, TailoredCV
 from src.domain.exceptions import WorkflowStateError
+from src.domain.interfaces import ModelUsageTracker
 
 
 class RequestType(str, Enum):
@@ -98,21 +100,34 @@ def route_after_gap(state: AgentWorkflowState) -> str:
     return TAILOR_NODE if _is_pipeline(state) else END
 
 
+def _tracked(agent: BaseAgent, usage_tracker: Optional[ModelUsageTracker]) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Run *agent* so every LLM call it makes is attributed to it."""
+    if usage_tracker is None:
+        return agent
+
+    def node(state: dict[str, Any]) -> dict[str, Any]:
+        with usage_tracker.step(agent.name):
+            return agent(state)
+
+    return node
+
+
 def create_careerpilot_graph(
     profile_agent: ProfileAgent,
     matcher_agent: MatcherAgent,
     gap_agent: GapAnalyzerAgent,
     tailor_agent: TailorAgent,
     verifier_agent: VerifierAgent,
+    usage_tracker: Optional[ModelUsageTracker] = None,
 ) -> Any:
-    """Build and compile the workflow graph."""
+    """Build and compile the workflow graph (with *usage_tracker*, LLM calls are tagged per agent)."""
     workflow = StateGraph(AgentWorkflowState)
 
-    workflow.add_node(PROFILE_NODE, profile_agent)
-    workflow.add_node(MATCHER_NODE, matcher_agent)
-    workflow.add_node(GAP_NODE, gap_agent)
-    workflow.add_node(TAILOR_NODE, tailor_agent)
-    workflow.add_node(VERIFIER_NODE, verifier_agent)
+    workflow.add_node(PROFILE_NODE, _tracked(profile_agent, usage_tracker))
+    workflow.add_node(MATCHER_NODE, _tracked(matcher_agent, usage_tracker))
+    workflow.add_node(GAP_NODE, _tracked(gap_agent, usage_tracker))
+    workflow.add_node(TAILOR_NODE, _tracked(tailor_agent, usage_tracker))
+    workflow.add_node(VERIFIER_NODE, _tracked(verifier_agent, usage_tracker))
 
     workflow.add_conditional_edges(START, route_request, list(set(_ENTRY_NODES.values())))
     workflow.add_conditional_edges(PROFILE_NODE, route_after_profile, [MATCHER_NODE, END])

@@ -32,6 +32,14 @@ class Settings(BaseSettings):
         description="Strong Groq model for agent reasoning tasks.",
     )
 
+    groq_fallback_models: str = Field(
+        default="openai/gpt-oss-120b,openai/gpt-oss-20b,qwen/qwen3.8-27b",
+        description=(
+            "Comma-separated Groq chat models (JSON mode) tried in order when the requested model "
+            "is still rate-limited after retries. Empty disables fallback."
+        ),
+    )
+
     groq_reasoning_effort: str = Field(
         default="low",
         description="reasoning_effort for gpt-oss models (none/low/medium/high; '' = provider default).",
@@ -205,6 +213,11 @@ class Settings(BaseSettings):
         aliases = {"fast": self.groq_fast_model, "agent": self.groq_agent_model, "": self.groq_agent_model}
         return aliases.get(step_model, step_model)
 
+    def fallback_chain(self, model: str) -> list[str]:
+        """*model* first, then every configured fallback model not already tried."""
+        fallbacks = [m.strip() for m in self.groq_fallback_models.split(",") if m.strip()]
+        return [model, *(m for m in dict.fromkeys(fallbacks) if m != model)]
+
 
 def get_settings() -> Settings:
     """Factory function to create a ``Settings`` instance.
@@ -214,8 +227,8 @@ def get_settings() -> Settings:
     return Settings()
 
 
-class CorsSettings(BaseSettings):
-    """Browser origins allowed to call the API (read at app start-up).
+class ServerSettings(BaseSettings):
+    """How the API server is exposed: CORS origins and environment (read at app start-up).
 
     Kept separate from ``Settings`` so building the FastAPI app does not
     require ``GROQ_API_KEY`` (tests and tooling import the app without it).
@@ -225,12 +238,20 @@ class CorsSettings(BaseSettings):
         default="http://localhost:3000,http://127.0.0.1:3000",
         description="Comma-separated origins allowed by CORS (the web UI).",
     )
+    app_env: str = Field(
+        default="development",
+        description="'production' removes admin endpoints (POST /ingest) from the API.",
+    )
 
     model_config = {
         "env_file": str(_PROJECT_ROOT / ".env"),
         "env_file_encoding": "utf-8",
         "extra": "ignore",
     }
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.strip().lower() == "production"
 
     @property
     def origins(self) -> list[str]:

@@ -8,6 +8,7 @@ Read-side interfaces are separated from write-side interfaces (Interface Segrega
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from contextlib import AbstractContextManager
 from typing import Optional
 
 from .entities import (
@@ -17,6 +18,7 @@ from .entities import (
     JobChunk,
     JobMatch,
     JobPosting,
+    ModelCall,
     ScoredChunk,
     SearchQuery,
     TailoredBullet,
@@ -182,6 +184,26 @@ class LLMClient(ABC):
         Raises:
             LLMResponseParseError: If JSON cannot be extracted after retry.
         """
+
+
+class ModelUsageTracker(ABC):
+    """Records which model answered each LLM request, attributed to the running agent.
+
+    The API opens a ``collect()`` scope per request; each agent node runs inside
+    a ``step(agent_name)`` scope; the LLM client calls ``record`` for every request.
+    """
+
+    @abstractmethod
+    def collect(self) -> AbstractContextManager[list[ModelCall]]:
+        """Collect every ``ModelCall`` recorded inside the ``with`` block into the yielded list."""
+
+    @abstractmethod
+    def step(self, agent: str) -> AbstractContextManager[None]:
+        """Attribute calls recorded inside the ``with`` block to *agent*."""
+
+    @abstractmethod
+    def record(self, requested_model: str, answered_model: str, cached: bool) -> None:
+        """Record one LLM request (ignored outside a ``collect()`` scope)."""
 
 
 # ── Query expansion ─────────────────────────────────────────────────

@@ -1,27 +1,32 @@
 // Typed client for the CareerPilot FastAPI backend. This is the only module that talks to the API.
 // Types mirror src/api/schemas.py.
 
+/**
+ * The API base URL. NEXT_PUBLIC_API_URL (inlined at build time) always wins, so a
+ * deployed UI (e.g. on Vercel) calls the deployed API. Without it, local development
+ * assumes the API on port 8000 of the host serving the page (localhost or a LAN IP).
+ */
 export function getApiUrl(): string {
-  const envUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (envUrl && envUrl.trim()) {
-    const cleanEnv = envUrl.replace(/\/$/, "");
-    if (typeof window !== "undefined" && window.location.hostname) {
-      const host = window.location.hostname;
-      if (host !== "localhost" && host !== "127.0.0.1" && (cleanEnv.includes("localhost") || cleanEnv.includes("127.0.0.1"))) {
-        const port = cleanEnv.match(/:(\d+)$/)?.[1] ?? "8000";
-        return `http://${host}:${port}`;
-      }
-    }
-    return cleanEnv;
-  }
-
+  const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (envUrl) return envUrl.replace(/\/+$/, "");
   if (typeof window !== "undefined" && window.location.hostname) {
     return `http://${window.location.hostname}:8000`;
   }
   return "http://127.0.0.1:8000";
 }
 
-export const API_URL = getApiUrl();
+/** Which Groq model answered one LLM request of an agent (mirrors ModelCallSchema). */
+export interface ModelCall {
+  agent: string;
+  requested_model: string;
+  answered_model: string;
+  used_fallback: boolean;
+  cached: boolean;
+}
+
+interface WithModelCalls {
+  model_calls?: ModelCall[];
+}
 
 export interface Experience {
   role: string;
@@ -69,7 +74,7 @@ export interface JobMatch {
   skills: string[];
 }
 
-export interface MatchResponse {
+export interface MatchResponse extends WithModelCalls {
   total_matches: number;
   matches: JobMatch[];
 }
@@ -80,7 +85,7 @@ export interface GapItem {
   evidence: string;
 }
 
-export interface GapReport {
+export interface GapReport extends WithModelCalls {
   job_id: number;
   job_title: string;
   matched_items: GapItem[];
@@ -98,7 +103,7 @@ export interface TailoredBullet {
   evidence: string;
 }
 
-export interface TailoredCV {
+export interface TailoredCV extends WithModelCalls {
   summary: string;
   bullets: TailoredBullet[];
   removed_bullets: TailoredBullet[];
@@ -110,11 +115,10 @@ export interface TailoredCV {
   } | null;
 }
 
+export type ProfileResponse = CandidateProfile & WithModelCalls;
+
 export interface Health {
   status: string;
-  fts5_available: boolean;
-  total_jobs: number;
-  total_chunks: number;
 }
 
 /** An HTTP error from the API, with the server's message and (for 503) the Retry-After wait. */
@@ -139,7 +143,7 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const isCrossHost = origin && !baseUrl.startsWith(origin);
     const corsHint = isCrossHost
-      ? ` If you are testing across LAN, verify the backend is listening on 0.0.0.0 and ALLOWED_ORIGINS in .env includes "${origin}".`
+      ? ` Check that the backend is running and that its ALLOWED_ORIGINS includes "${origin}".`
       : "";
     throw new ApiError(
       0,
@@ -183,7 +187,7 @@ export const api = {
     const form = new FormData();
     if ("file" in input) form.append("file", input.file, input.file.name);
     else form.append("raw_text", input.text);
-    return request<CandidateProfile>("/profile", { method: "POST", body: form, signal });
+    return request<ProfileResponse>("/profile", { method: "POST", body: form, signal });
   },
 
   match: (profile: CandidateProfile, preferences: string, topK: number, signal?: AbortSignal) =>
@@ -197,6 +201,46 @@ export const api = {
     postJson<TailoredCV>("/tailor", { profile, job_id: jobId }, signal),
 };
 
+const WAKE_PROBE_TIMEOUT_MS = 8_000;
+const WAKE_RETRY_EVERY_MS = 4_000;
+const WAKE_GIVE_UP_AFTER_MS = 5 * 60_000;
+
+const sleep = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener("abort", () => {
+      clearTimeout(timer);
+      reject(new DOMException("Aborted", "AbortError"));
+    });
+  });
+
+/**
+ * Resolves once GET /health answers. A free Hugging Face Space sleeps when idle; while it
+ * starts, requests fail or return the proxy's own page, so `onWaking` is called once and the
+ * probe is repeated instead of reporting an error.
+ */
+export async function waitUntilAwake(onWaking: () => void, signal?: AbortSignal): Promise<void> {
+  const deadline = Date.now() + WAKE_GIVE_UP_AFTER_MS;
+  let warned = false;
+  for (;;) {
+    const probe = AbortSignal.any([AbortSignal.timeout(WAKE_PROBE_TIMEOUT_MS), ...(signal ? [signal] : [])]);
+    try {
+      const health = await api.health(probe);
+      if (health.status === "ok") return;
+    } catch (error) {
+      if (signal?.aborted) throw error;
+    }
+    if (Date.now() > deadline) {
+      throw new ApiError(0, `The CareerPilot API at ${getApiUrl()} did not wake up within 5 minutes.`, null);
+    }
+    if (!warned) {
+      warned = true;
+      onWaking();
+    }
+    await sleep(WAKE_RETRY_EVERY_MS, signal);
+  }
+}
+
 /** A short, user-facing explanation for an API error. */
 export function describeError(error: unknown): { title: string; message: string; retryAfterSeconds: number | null } {
   if (!(error instanceof ApiError)) {
@@ -207,7 +251,8 @@ export function describeError(error: unknown): { title: string; message: string;
     case 503:
       return {
         title: "Groq rate limit reached",
-        message: "The free Groq tier allows 8,000 tokens per minute per model. Wait for the countdown, then retry.",
+        message:
+          "Every Groq model in the fallback list is rate-limited right now (the free tier allows 8,000 tokens per minute per model). Wait for the countdown, then retry.",
         retryAfterSeconds: error.retryAfterSeconds ?? 30,
       };
     case 502:

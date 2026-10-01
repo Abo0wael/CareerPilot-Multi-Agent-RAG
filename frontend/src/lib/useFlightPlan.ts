@@ -2,11 +2,31 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { AgentId } from "./agents";
-import { api, type CandidateProfile, type GapReport, type JobMatch, type TailoredCV } from "./api";
+import {
+  api,
+  waitUntilAwake,
+  type CandidateProfile,
+  type GapReport,
+  type JobMatch,
+  type ModelCall,
+  type TailoredCV,
+} from "./api";
 
 export type AgentStatus = "idle" | "running" | "done" | "error" | "cancelled";
 export type AgentRun = { status: AgentStatus; ms: number | null };
 export type CvInput = { file: File } | { text: string };
+/** "waking": the API did not answer /health yet (a sleeping Space is starting). */
+export type ServerStatus = "checking" | "waking" | "ready";
+export type AgentModels = Partial<Record<AgentId, ModelCall[]>>;
+
+// Agent names as the backend reports them in model_calls.
+const AGENT_ID_BY_NAME: Record<string, AgentId> = {
+  ProfileAgent: "profile",
+  MatcherAgent: "matcher",
+  GapAnalyzerAgent: "gap",
+  TailorAgent: "tailor",
+  VerifierAgent: "verifier",
+};
 
 export interface Preferences {
   keywords: string;
@@ -51,12 +71,43 @@ export function useFlightPlan() {
   const [tailored, setTailored] = useState<TailoredCV | null>(null);
   const [error, setError] = useState<FlightError | null>(null);
   const [busy, setBusy] = useState(false);
+  const [server, setServer] = useState<ServerStatus>("checking");
+  const [models, setModels] = useState<AgentModels>({});
   const controller = useRef<AbortController | null>(null);
+  const awake = useRef<Promise<void> | null>(null);
 
-  useEffect(() => () => controller.current?.abort(), []);
+  /** Waits for /health once per page; later runs reuse the answer. */
+  const ensureAwake = (signal?: AbortSignal) => {
+    awake.current ??= waitUntilAwake(() => setServer("waking"), signal).then(
+      () => setServer("ready"),
+      (err) => {
+        awake.current = null;
+        throw err;
+      },
+    );
+    return awake.current;
+  };
 
-  const mark = (ids: AgentId[], run: AgentRun) =>
+  useEffect(() => {
+    // Start waking a sleeping server as soon as the page opens.
+    ensureAwake().catch(() => undefined);
+    return () => controller.current?.abort();
+  }, []);
+
+  const mark = (ids: AgentId[], run: AgentRun) => {
     setAgents((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, run])) }));
+    if (run.status !== "done") setModels((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, undefined])) }));
+  };
+
+  const recordModels = (calls: ModelCall[] | undefined) => {
+    if (!calls?.length) return;
+    const byAgent: AgentModels = {};
+    for (const call of calls) {
+      const id = AGENT_ID_BY_NAME[call.agent];
+      if (id) (byAgent[id] ??= []).push(call);
+    }
+    setModels((prev) => ({ ...prev, ...byAgent }));
+  };
 
   /** Starts a new run, cancelling any request still in flight. */
   const begin = () => {
@@ -69,12 +120,13 @@ export function useFlightPlan() {
   };
 
   /** Runs one request for the given agent(s) and records its real duration. */
-  const step = async <T,>(ids: AgentId[], call: () => Promise<T>): Promise<T> => {
+  const step = async <T extends { model_calls?: ModelCall[] }>(ids: AgentId[], call: () => Promise<T>): Promise<T> => {
     mark(ids, { status: "running", ms: null });
     const started = performance.now();
     try {
       const result = await call();
       mark(ids, { status: "done", ms: Math.round(performance.now() - started) });
+      recordModels(result.model_calls);
       return result;
     } catch (err) {
       mark(ids, { status: isAbort(err) ? "cancelled" : "error", ms: null });
@@ -120,6 +172,7 @@ export function useFlightPlan() {
   const start = async (input: CvInput, thenMatch: Preferences | null, preferredJobId: number | null = null) => {
       const signal = begin();
       setAgents(IDLE);
+      setModels({});
       setProfile(null);
       setMatches(null);
       setGap(null);
@@ -127,7 +180,9 @@ export function useFlightPlan() {
       setSelectedJobId(null);
       let failure: unknown;
       try {
-        const p = await step(["profile"], () => api.buildProfile(input, signal));
+        await ensureAwake(signal);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { model_calls, ...p } = await step(["profile"], () => api.buildProfile(input, signal));
         if (signal.aborted) return;
         setProfile(p);
         if (thenMatch) await matchWith(p, thenMatch, signal, preferredJobId);
@@ -143,6 +198,7 @@ export function useFlightPlan() {
       const signal = begin();
       let failure: unknown;
       try {
+        await ensureAwake(signal);
         await matchWith(profile, prefs, signal);
       } catch (err) {
         failure = err;
@@ -156,6 +212,7 @@ export function useFlightPlan() {
       const signal = begin();
       let failure: unknown;
       try {
+        await ensureAwake(signal);
         await analyzeWith(profile, jobId, signal);
       } catch (err) {
         failure = err;
@@ -171,5 +228,5 @@ export function useFlightPlan() {
     setBusy(false);
   };
 
-  return { agents, profile, matches, selectedJobId, gap, tailored, error, busy, start, findMatches, analyzeJob, cancel, reportError };
+  return { agents, models, server, profile, matches, selectedJobId, gap, tailored, error, busy, start, findMatches, analyzeJob, cancel, reportError };
 }

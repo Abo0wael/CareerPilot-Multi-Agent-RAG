@@ -371,3 +371,23 @@ class IndexStats:
     total_jobs: int
     total_chunks: int
     fts5_available: bool
+
+
+# ── LLM usage ────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class ModelCall:
+    """Which model answered one LLM request made by an agent.
+
+    ``answered_model`` differs from ``requested_model`` when the requested model
+    was rate-limited and a fallback model answered instead.
+    """
+
+    agent: str
+    requested_model: str
+    answered_model: str
+    cached: bool
+
+    @property
+    def used_fallback(self) -> bool:
+        return self.answered_model != self.requested_model
