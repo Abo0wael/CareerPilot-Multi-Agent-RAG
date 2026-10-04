@@ -14,6 +14,25 @@ export function getApiUrl(): string {
   return "http://127.0.0.1:8000";
 }
 
+/** True when the API runs on this machine or the local network (the README quickstart), not a hosted backend. */
+function isLocalApi(baseUrl: string): boolean {
+  try {
+    const host = new URL(baseUrl).hostname;
+    return /^(localhost|127\.\d+\.\d+\.\d+|\[::1\]|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/.test(host);
+  } catch {
+    return false;
+  }
+}
+
+/** What to try when the API cannot be reached or refuses this origin, for a local or a hosted backend. */
+function connectionHint(baseUrl: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "this origin";
+  if (isLocalApi(baseUrl)) {
+    return `Check that the backend is running and that ALLOWED_ORIGINS in the backend .env includes "${origin}".`;
+  }
+  return `The backend may be waking up or temporarily unavailable; try again in a minute. If it keeps failing, its ALLOWED_ORIGINS setting must include "${origin}".`;
+}
+
 /** Which Groq model answered one LLM request of an agent (mirrors ModelCallSchema). */
 export interface ModelCall {
   agent: string;
@@ -135,16 +154,7 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
     response = await fetch(`${baseUrl}${path}`, init);
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const isCrossHost = origin && !baseUrl.startsWith(origin);
-    const corsHint = isCrossHost
-      ? ` Check that the backend is running and that its ALLOWED_ORIGINS includes "${origin}".`
-      : "";
-    throw new ApiError(
-      0,
-      `Cannot reach the CareerPilot API at ${baseUrl}. Is the backend running?${corsHint}`,
-      null,
-    );
+    throw new ApiError(0, `Cannot reach the CareerPilot API at ${baseUrl}. ${connectionHint(baseUrl)}`, null);
   }
   if (!response.ok) {
     let detail = "";
@@ -208,16 +218,23 @@ export function describeError(error: unknown): { title: string; message: string;
           "Every Groq model in the fallback list is rate-limited right now (the free tier allows 8,000 tokens per minute per model). Wait for the countdown, then retry.",
         retryAfterSeconds: error.retryAfterSeconds ?? 30,
       };
+    case 429:
+      return {
+        title: "Too many requests",
+        message: `${error.detail} The public demo limits requests per visitor to protect the shared Groq quota.`,
+        retryAfterSeconds: error.retryAfterSeconds ?? 60,
+      };
+    case 413:
+      return { title: "The CV file is too large", message: error.detail, retryAfterSeconds: null };
     case 502:
       return { title: "The language model returned an error", message: error.detail, retryAfterSeconds: null };
     case 404:
       return { title: "Job not found", message: error.detail, retryAfterSeconds: null };
     case 400:
       if (error.detail.toLowerCase().includes("cors")) {
-        const origin = typeof window !== "undefined" ? window.location.origin : "this origin";
         return {
           title: "CORS error: origin disallowed",
-          message: `${error.detail}. Add ${origin} to ALLOWED_ORIGINS in the backend .env file.`,
+          message: `${error.detail}. ${connectionHint(getApiUrl())}`,
           retryAfterSeconds: null,
         };
       }

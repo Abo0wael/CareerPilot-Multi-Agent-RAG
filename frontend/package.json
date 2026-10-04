@@ -2,6 +2,9 @@
   "name": "careerpilot-web",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9"
+  },
   "scripts": {
     "sync-data": "node scripts/sync-data.mjs",
     "predev": "node scripts/sync-data.mjs",
