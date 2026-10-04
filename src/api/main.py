@@ -1,7 +1,7 @@
 """FastAPI backend for CareerPilot.
 
 Endpoints:
-- GET  /health    index diagnostics (503 while the index has no jobs)
+- GET  /health    index diagnostics
 - POST /profile   CV file or text -> CandidateProfile            (graph: profile)
 - POST /match     profile + preferences -> ranked JobMatch list  (graph: matcher)
 - POST /gap       profile + job_id -> GapReport                   (graph: gap)
@@ -13,9 +13,6 @@ Every reasoning endpoint runs the LangGraph workflow and reports, in
 ``model_calls``, which Groq model answered each agent (a fallback model answers
 when the requested one stays rate-limited). Domain exceptions are mapped to
 HTTP status codes in ``error_handlers.py``.
-
-Opt-in protection for a public deployment: RATE_LIMIT (per client IP, 429 with
-Retry-After) on every Groq-calling endpoint, and MAX_UPLOAD_MB on CV uploads (413).
 """
 
 from __future__ import annotations
@@ -24,16 +21,14 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Response, UploadFile, status
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.agents.workflow import CareerPilotWorkflow
 from src.api.dependencies import (
     clear_app_state,
-    enforce_rate_limit,
     get_index_stats,
     get_ingest_jobs_use_case,
-    get_max_upload_bytes,
     get_model_usage_tracker,
     get_workflow,
     require_admin_token,
@@ -82,23 +77,11 @@ app.add_middleware(
 )
 register_error_handlers(app)
 
-# Endpoints that call Groq; RATE_LIMIT applies to each of them (no-op when empty).
-RATE_LIMITED = [Depends(enforce_rate_limit)]
 
-
-async def _read_cv(file: Optional[UploadFile], raw_text: Optional[str], max_bytes: int) -> dict:
-    """Return workflow CV input from a multipart upload or a text form field.
-
-    Uploads larger than *max_bytes* are rejected with 413 before any parsing.
-    """
+async def _read_cv(file: Optional[UploadFile], raw_text: Optional[str]) -> dict:
+    """Return workflow CV input from a multipart upload or a text form field."""
     if file and file.filename:
-        file_bytes = await file.read(max_bytes + 1)
-        if len(file_bytes) > max_bytes:
-            raise HTTPException(
-                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
-                detail=f"CV file is too large: the limit is {max_bytes / (1024 * 1024):g} MB.",
-            )
-        return {"file_bytes": file_bytes, "filename": file.filename}
+        return {"file_bytes": await file.read(), "filename": file.filename}
     if raw_text and raw_text.strip():
         return {"raw_text": raw_text.strip()}
     raise HTTPException(
@@ -108,40 +91,33 @@ async def _read_cv(file: Optional[UploadFile], raw_text: Optional[str], max_byte
 
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
-def health_check(response: Response, stats_reader: IndexStatsReader = Depends(get_index_stats)) -> HealthResponse:
-    """Index diagnostics: job/chunk counts and FTS5 availability.
-
-    Returns 503 with status "unavailable" while the index has no jobs, e.g. a missing database
-    file (opening it creates an empty one), so readiness checks are reliable.
-    """
+def health_check(stats_reader: IndexStatsReader = Depends(get_index_stats)) -> HealthResponse:
+    """Index diagnostics: job/chunk counts and FTS5 availability."""
     stats = stats_reader.get_stats()
-    if stats.total_jobs == 0:
-        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     return HealthResponse(
-        status="ok" if stats.total_jobs else "unavailable",
+        status="ok",
         fts5_available=stats.fts5_available,
         total_jobs=stats.total_jobs,
         total_chunks=stats.total_chunks,
     )
 
 
-@app.post("/profile", response_model=ProfileResponse, tags=["CV Profile"], dependencies=RATE_LIMITED)
+@app.post("/profile", response_model=ProfileResponse, tags=["CV Profile"])
 async def build_profile(
     file: Optional[UploadFile] = File(None),
     raw_text: Optional[str] = Form(None),
-    max_upload_bytes: int = Depends(get_max_upload_bytes),
     workflow: CareerPilotWorkflow = Depends(get_workflow),
     usage: ModelUsageTracker = Depends(get_model_usage_tracker),
 ) -> ProfileResponse:
     """Extract a structured profile from an uploaded CV (PDF / text) or a text form field."""
-    cv_input = await _read_cv(file, raw_text, max_upload_bytes)
+    cv_input = await _read_cv(file, raw_text)
     with usage.collect() as calls:
         response = ProfileResponse.from_domain(workflow.build_profile(**cv_input))
     response.model_calls = ModelCallSchema.from_calls(calls)
     return response
 
 
-@app.post("/match", response_model=MatchResponse, tags=["Matching"], dependencies=RATE_LIMITED)
+@app.post("/match", response_model=MatchResponse, tags=["Matching"])
 def match_jobs(
     request: MatchRequest,
     workflow: CareerPilotWorkflow = Depends(get_workflow),
@@ -156,7 +132,7 @@ def match_jobs(
     return response
 
 
-@app.post("/gap", response_model=GapResponse, tags=["Gap Analysis"], dependencies=RATE_LIMITED)
+@app.post("/gap", response_model=GapResponse, tags=["Gap Analysis"])
 def analyze_gap(
     request: JobTargetRequest,
     workflow: CareerPilotWorkflow = Depends(get_workflow),
@@ -169,7 +145,7 @@ def analyze_gap(
     return response
 
 
-@app.post("/tailor", response_model=TailorResponse, tags=["CV Tailoring"], dependencies=RATE_LIMITED)
+@app.post("/tailor", response_model=TailorResponse, tags=["CV Tailoring"])
 def tailor_cv(
     request: JobTargetRequest,
     workflow: CareerPilotWorkflow = Depends(get_workflow),
@@ -182,18 +158,17 @@ def tailor_cv(
     return response
 
 
-@app.post("/pipeline", response_model=PipelineResponse, tags=["Pipeline"], dependencies=RATE_LIMITED)
+@app.post("/pipeline", response_model=PipelineResponse, tags=["Pipeline"])
 async def run_pipeline(
     file: Optional[UploadFile] = File(None),
     raw_text: Optional[str] = Form(None),
     preferences: str = Form(""),
     top_k: int = Form(10, ge=1, le=50),
-    max_upload_bytes: int = Depends(get_max_upload_bytes),
     workflow: CareerPilotWorkflow = Depends(get_workflow),
     usage: ModelUsageTracker = Depends(get_model_usage_tracker),
 ) -> PipelineResponse:
     """Full flow: profile -> match -> gap -> tailor -> verify (for the top-ranked job)."""
-    cv_input = await _read_cv(file, raw_text, max_upload_bytes)
+    cv_input = await _read_cv(file, raw_text)
     with usage.collect() as calls:
         result = workflow.run_pipeline(**cv_input, preferences=preferences, top_k=top_k)
     return PipelineResponse(

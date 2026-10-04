@@ -7,7 +7,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/LangGraph-agents-1C3C3C)
 ![Groq](https://img.shields.io/badge/LLM-Groq-F55036)
-![Tests](https://img.shields.io/badge/tests-160%20passing-2EA44F)
+![Tests](https://img.shields.io/badge/tests-148%20passing-2EA44F)
 
 ![CareerPilot landing page](docs/screenshots/landing-light.png)
 
@@ -186,7 +186,7 @@ Chunking did not improve precision (below). Its measured value is fewer tokens a
 | Retrieval | SQLite FTS5 (BM25), no embeddings, no vector DB |
 | Data | pandas, pypdf, Kaggle LinkedIn job postings |
 | Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS, lucide-react, framer-motion |
-| Quality | pytest (160 tests), ESLint, architecture test for the dependency rule |
+| Quality | pytest (148 tests), ESLint, architecture test for the dependency rule |
 
 ## Project structure
 
@@ -199,12 +199,10 @@ src/
   api/             FastAPI endpoints, schemas, error handlers, dependency wiring
 frontend/          Next.js web UI
 scripts/           build_index, evaluate, warm_demo_cache, smoke_test_api, metering, eda_chunking,
-                   deploy_space (stage/upload the Hugging Face Space),
                    analysis/ (tech-subset audit sample, chunking token savings)
 tests/             backend tests + synthetic CV fixtures
 outputs/evaluation/  measured results
-docs/              walkthrough (Arabic), deployment guide, screenshots
-Dockerfile         API image for a Hugging Face Space (requirements-server.txt)
+docs/              walkthrough (Arabic), screenshots
 ```
 
 ## Quickstart (local)
@@ -225,7 +223,7 @@ copy .env.example .env      # macOS/Linux: cp .env.example .env
 kaggle datasets download -d arshkon/linkedin-job-postings -p data --unzip
 
 python scripts/build_index.py        # about 1 minute, zero LLM calls
-python -m pytest                     # 160 tests, never call Groq
+python -m pytest                     # 148 tests, never call Groq
 python scripts/warm_demo_cache.py    # pre-cache both demo scenarios
 ```
 
@@ -263,35 +261,26 @@ It sends the same requests as the UI and prints, per step, the time and which mo
 
 The API only accepts browser requests from `ALLOWED_ORIGINS` (default `http://localhost:3000,http://127.0.0.1:3000`).
 
-## Deployment
-
-The project can also run for free as a hosted demo: the API as a **Hugging Face Docker Space** and the web UI on **Vercel**. The local quickstart above is unchanged; everything deployment-specific is opt-in.
-
-- `scripts/deploy_space.py` stages the `Dockerfile`, `src/`, the prebuilt index and the demo LLM cache, and uploads them to the Space only with `--upload`. The index and cache are never committed to git.
-- Two settings protect a public API: `RATE_LIMIT` (for example `10/minute` per client IP on each Groq-calling endpoint; empty = off, the default) and `MAX_UPLOAD_MB` (default 5; larger CV files get `413`).
-
-Step-by-step guide and troubleshooting: [docs/DEPLOY.md](docs/DEPLOY.md).
-
 ## API reference
 
 | Method | Endpoint | Purpose | Errors |
 |---|---|---|---|
-| GET | `/health` | Job/chunk counts, FTS5 availability | 503 (index has no jobs) |
-| POST | `/profile` | CV file (`.pdf`/`.txt`) or `raw_text` → structured profile | 400, 413, 429, 502, 503 |
-| POST | `/match` | Profile + preferences → top-k jobs with reasons | 429, 502, 503 |
-| POST | `/gap` | Profile + `job_id` → matched (with evidence) and missing requirements | 404, 429, 502, 503 |
-| POST | `/tailor` | Profile + `job_id` → verified bullets and `removed_bullets` | 404, 429, 502, 503 |
-| POST | `/pipeline` | CV → profile, matches, gap and verified tailoring for the top match | 400, 413, 429, 502, 503 |
+| GET | `/health` | Job/chunk counts, FTS5 availability | 503 |
+| POST | `/profile` | CV file (`.pdf`/`.txt`) or `raw_text` → structured profile | 400, 502, 503 |
+| POST | `/match` | Profile + preferences → top-k jobs with reasons | 502, 503 |
+| POST | `/gap` | Profile + `job_id` → matched (with evidence) and missing requirements | 404, 502, 503 |
+| POST | `/tailor` | Profile + `job_id` → verified bullets and `removed_bullets` | 404, 502, 503 |
+| POST | `/pipeline` | CV → profile, matches, gap and verified tailoring for the top match | 400, 502, 503 |
 | POST | `/ingest` | Rebuild the index (header `X-Admin-Token`; disabled when `ADMIN_TOKEN` is empty) | 401, 403 |
 
 **Model fallback.** Every reasoning response includes `model_calls`: for each LLM request, the agent, the requested model, the model that answered, and whether the answer came from the cache. The Groq client retries a 429 as Groq's `retry-after` asks. If the model is still rate-limited after the retries, or asks for a wait longer than 60 s (for example a daily limit), the same request goes to the next model in `GROQ_FALLBACK_MODELS`. The default list is `gpt-oss-120b → gpt-oss-20b → qwen/qwen3.8-27b`, the three Groq chat models with JSON mode available on the project's account. The response then shows `used_fallback: true`. Fallback answers are cached under the fallback model's name, so cache hits for the primary model, including the demos, are unchanged.
 
-`503` = every model in the fallback list is rate-limited (with `Retry-After`), or, on `/health`, the index has no jobs (missing or empty database; same fields, with `"status": "unavailable"`); `502` = Groq error or unreadable model output; `429` = this client exceeded `RATE_LIMIT` (only when set; with `Retry-After`); `413` = the CV file is larger than `MAX_UPLOAD_MB`.
+`503` = every model in the fallback list is rate-limited (with `Retry-After`); `502` = Groq error or unreadable model output.
 
 ## Testing
 
 ```bash
-python -m pytest            # backend: 160 tests
+python -m pytest            # backend: 148 tests
 cd frontend && npm run lint && npm run build
 ```
 
@@ -299,7 +288,6 @@ cd frontend && npm run lint && npm run build
 - **`test_graph.py`:** checks exactly which agents run for each request type (e.g. `gap` never runs the tailor).
 - **`test_api_endpoints.py`:** runs the real graph with fake ports and checks that a Groq 429 inside an agent reaches the client as 503.
 - **`test_model_fallback.py`:** a fake Groq SDK answers 429 for the first model. It checks that the next model answers, that `model_calls` reports it per agent, that a long `retry-after` falls back at once, and that a cached primary answer is still served.
-- **`test_api_protection.py`:** the opt-in rate limit (429 with `Retry-After`, counted per endpoint, off by default), the 413 upload limit, and `/health` returning 503 for an empty or missing index.
 - **Also covered:** strict verdict parsing, reranker ordering, CORS, and ingest authentication.
 - **Fakes, not Groq:** all tests use fakes (`tests/fakes.py`) or a mocked Groq SDK.
 

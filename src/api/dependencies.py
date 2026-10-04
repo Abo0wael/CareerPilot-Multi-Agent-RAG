@@ -8,15 +8,10 @@ see SQLite or Groq classes directly.
 from __future__ import annotations
 
 import logging
-import math
 import secrets
-import time
 from typing import Any, Optional
 
-from fastapi import Depends, Header, HTTPException, Request, status
-from limits import parse as parse_rate_limit
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import Depends, Header, HTTPException, status
 
 from src.agents.gap_agent import GapAnalyzerAgent
 from src.agents.graph import create_careerpilot_graph
@@ -73,11 +68,6 @@ def _job_repository(settings: Settings) -> SQLiteJobRepository:
 
 def _usage_tracker() -> ContextModelUsageTracker:
     return _singleton("usage_tracker", ContextModelUsageTracker)
-
-
-def _rate_limiter() -> Limiter:
-    # In-memory storage: counters live in this process and reset on restart (one Space container).
-    return _singleton("rate_limiter", lambda: Limiter(key_func=get_remote_address))
 
 
 def _llm_client(settings: Settings) -> GroqClient:
@@ -167,33 +157,6 @@ def get_ingest_jobs_use_case(settings: Settings = Depends(get_settings)) -> Inge
         ),
         index_writer=_sqlite_index(settings),
     )
-
-
-def enforce_rate_limit(request: Request, settings: Settings = Depends(get_settings)) -> None:
-    """Reject the request with 429 when the client IP exceeds RATE_LIMIT on this endpoint.
-
-    Counted per (client IP, endpoint path). Disabled when RATE_LIMIT is empty (the default).
-    Behind a proxy, uvicorn's --proxy-headers makes ``request.client`` the real client IP.
-    """
-    if not settings.rate_limit:
-        return
-    limit = parse_rate_limit(settings.rate_limit)
-    strategy = _rate_limiter().limiter
-    key = get_remote_address(request)
-    if strategy.hit(limit, key, request.url.path):
-        return
-    reset_time, _ = strategy.get_window_stats(limit, key, request.url.path)
-    retry_after = max(1, math.ceil(reset_time - time.time()))
-    raise HTTPException(
-        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-        detail=f"Rate limit exceeded ({settings.rate_limit} per client). Retry in {retry_after} seconds.",
-        headers={"Retry-After": str(retry_after)},
-    )
-
-
-def get_max_upload_bytes(settings: Settings = Depends(get_settings)) -> int:
-    """Largest accepted CV upload in bytes (MAX_UPLOAD_MB)."""
-    return int(settings.max_upload_mb * 1024 * 1024)
 
 
 def require_admin_token(

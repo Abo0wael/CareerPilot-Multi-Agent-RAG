@@ -1,7 +1,7 @@
 # CareerPilot: Review Report
 
-> **Author:** Ahmed (CS student) | **State:** final (2026-10-01); adds model fallback on rate limits; optional free deployment (2026-10-04)
-> **Tests:** 160 passing (`C:\Anaconda\envs\careerpilot\python.exe -m pytest`), none of which call Groq.
+> **Author:** Ahmed (CS student) | **State:** final, local-only (2026-10-01); adds model fallback on rate limits
+> **Tests:** 148 passing (`C:\Anaconda\envs\careerpilot\python.exe -m pytest`), none of which call Groq.
 
 This report records what the system does, what was wrong when it was handed over, what was changed, and the measured results. The README has the user-facing overview; `outputs/evaluation/evaluation_report.md` has the generated evaluation tables.
 
@@ -12,7 +12,7 @@ This report records what the system does, what was wrong when it was handed over
 - Windows, conda env `careerpilot`, Python 3.11.16 (`C:\Anaconda\envs\careerpilot\python.exe`).
 - Dependencies are in `requirements.txt`. `groq` is now declared directly; the unused `langchain-groq` / `langchain-core` were removed.
 - `.env` holds `GROQ_API_KEY`, `GROQ_FAST_MODEL=openai/gpt-oss-20b`, `GROQ_AGENT_MODEL=openai/gpt-oss-120b`, and optionally `ADMIN_TOKEN`, per-step models, `GROQ_FALLBACK_MODELS`, `GROQ_REASONING_EFFORT` and `ALLOWED_ORIGINS` (see `.env.example`).
-- The project runs locally by default (API on `127.0.0.1:8000`, UI on `localhost:3000`). An optional hosted demo (API as a Hugging Face Docker Space, UI on Vercel) is described in `docs/DEPLOY.md`; its settings (`RATE_LIMIT`, `MAX_UPLOAD_MB`, `ALLOWED_ORIGINS`) are opt-in and the local defaults are unchanged.
+- The project runs locally only (API on `127.0.0.1:8000`, UI on `localhost:3000`); there is no hosted deployment.
 - Never committed: `data/`, `index/`, `.env`, `.llm_cache/`. `outputs/evaluation/` **is** committed (graded deliverable).
 
 ## 2. File tree (source)
@@ -165,7 +165,7 @@ Details and interpretation are in the README (section 6). Generated tables are i
   - One run failed with an error that was not captured and did not reproduce.
   - The demo relies on the cache for a stable presentation.
 
-## 9. Tests (160)
+## 9. Tests (148)
 
 | File | Tests | Covers |
 |---|---|---|
@@ -180,7 +180,6 @@ Details and interpretation are in the README (section 6). Generated tables are i
 | test_entities.py | 16 | entity invariants, model aliases |
 | test_fts5.py | 1 | FTS5 available |
 | test_cors.py | 6 | allowed origins from ALLOWED_ORIGINS, unknown origin rejected, Retry-After exposed |
-| test_api_protection.py | 12 | opt-in per-IP rate limit (429 + Retry-After, per endpoint, off by default, malformed value rejected), 413 upload limit, `/health` 503 for an empty or missing index |
 | test_model_fallback.py | 12 | fallback chain, 429 on the first model answered by the next, all limited → 503 error, long `retry-after` falls back at once, primary cache hit unchanged, per-agent `model_calls` through the graph and the API |
 
 ## 10. Deviations from the specification

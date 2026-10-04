@@ -9,8 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from limits import parse_many
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
@@ -65,16 +64,6 @@ class Settings(BaseSettings):
         default="",
         description="Token required in the X-Admin-Token header for /ingest. Empty disables /ingest.",
     )
-
-    # ── Public API protection (opt-in for hosted deployments) ───────
-    rate_limit: str = Field(
-        default="",
-        description=(
-            "Per-client-IP limit for each Groq-calling endpoint, in slowapi/limits syntax "
-            "(e.g. '10/minute'). Empty disables rate limiting."
-        ),
-    )
-    max_upload_mb: float = Field(default=5.0, gt=0, description="Largest accepted CV upload, in megabytes.")
 
     # ── Data paths ───────────────────────────────────────────────────
     data_raw_dir: Path = Field(
@@ -203,15 +192,6 @@ class Settings(BaseSettings):
         "extra": "ignore",
     }
 
-
-    @field_validator("rate_limit")
-    @classmethod
-    def _valid_rate_limit(cls, value: str) -> str:
-        """Fail at start-up, not on the first request, if RATE_LIMIT is malformed."""
-        value = value.strip()
-        if value:
-            parse_many(value)  # raises ValueError, e.g. for "10 per banana"
-        return value
 
     def model_for(self, step_model: str) -> str:
         """Resolve a per-step model setting ("fast" / "agent" aliases, or an explicit model id)."""
